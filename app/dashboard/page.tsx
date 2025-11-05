@@ -75,37 +75,37 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-black/30 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 AI Pitch Deck Creator
               </h1>
             </div>
             <div className="flex items-center gap-4">
               <Link
                 href="/reference-materials"
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2"
               >
                 📁 Reference Materials
               </Link>
               {(user as any)?.user_metadata?.is_admin && (
                 <Link
                   href="/admin"
-                  className="px-4 py-2 text-sm font-semibold text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-semibold text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors flex items-center gap-2"
                 >
                   ⚙️ Admin
                 </Link>
               )}
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-300">
                 {user?.email}
               </span>
               <button
                 onClick={() => signOut()}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 Sign Out
               </button>
@@ -120,8 +120,8 @@ function DashboardContent() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">My Pitch Decks</h2>
-              <p className="mt-1 text-gray-600">
+              <h2 className="text-3xl font-bold text-white">My Pitch Decks</h2>
+              <p className="mt-1 text-gray-300">
                 Create and manage your presentation decks
               </p>
             </div>
@@ -137,7 +137,7 @@ function DashboardContent() {
               </Link>
               <button
                 onClick={() => setShowNewDeckModal(true)}
-                className="px-6 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-6 py-3 bg-white/10 text-white border-2 border-white/20 rounded-lg font-semibold hover:bg-white/20 transition-colors flex items-center gap-2 backdrop-blur-sm"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -150,7 +150,7 @@ function DashboardContent() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
             {error}
           </div>
         )}
@@ -158,22 +158,22 @@ function DashboardContent() {
         {/* Loading State */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading your decks...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+            <p className="mt-4 text-gray-300">Loading your decks...</p>
           </div>
         ) : decks.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+          <div className="text-center py-12 bg-white/5 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/20">
             <div className="text-6xl mb-4">📊</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-white mb-2">
               No pitch decks yet
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-300 mb-6">
               Create your first pitch deck to get started
             </p>
             <button
               onClick={() => setShowNewDeckModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-colors shadow-lg"
             >
               Create Your First Deck
             </button>
@@ -184,7 +184,7 @@ function DashboardContent() {
             {decks.map((deck) => (
               <div
                 key={deck.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow border border-gray-200 overflow-hidden group"
+                className="bg-white/10 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-white/20 overflow-hidden group"
               >
                 {/* Deck Preview */}
                 <div className="h-40 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
@@ -198,15 +198,15 @@ function DashboardContent() {
 
                 {/* Deck Info */}
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
+                  <h3 className="text-lg font-semibold text-white mb-2 truncate">
                     {deck.name}
                   </h3>
                   {deck.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-sm text-gray-300 mb-4 line-clamp-2">
                       {deck.description}
                     </p>
                   )}
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
                     <span>Updated {formatDate(deck.updated_at)}</span>
                   </div>
 
@@ -214,19 +214,19 @@ function DashboardContent() {
                   <div className="flex gap-2">
                     <Link
                       href={`/editor/${deck.id}`}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors text-center"
+                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors text-center"
                     >
                       Edit
                     </Link>
                     <Link
                       href={`/present/${deck.id}`}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 bg-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/30 transition-colors backdrop-blur-sm"
                     >
                       Present
                     </Link>
                     <button
                       onClick={() => handleDeleteDeck(deck.id)}
-                      className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"
+                      className="px-4 py-2 bg-red-500/20 text-red-300 text-sm font-medium rounded-lg hover:bg-red-500/30 transition-colors"
                     >
                       Delete
                     </button>
@@ -283,13 +283,13 @@ function NewDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+    <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Create New Deck</h2>
+          <h2 className="text-2xl font-bold text-white">Create New Deck</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-white transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -298,14 +298,14 @@ function NewDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-2">
               Deck Name *
             </label>
             <input
@@ -314,13 +314,13 @@ function NewDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
               placeholder="My Startup Pitch"
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-200 mb-2">
               Description
             </label>
             <textarea
@@ -328,13 +328,13 @@ function NewDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
               placeholder="Brief description of your pitch deck..."
             />
           </div>
 
           <div>
-            <label htmlFor="brandUrl" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="brandUrl" className="block text-sm font-medium text-gray-200 mb-2">
               Brand Website URL (optional)
             </label>
             <input
@@ -342,10 +342,10 @@ function NewDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               type="url"
               value={brandUrl}
               onChange={(e) => setBrandUrl(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
               placeholder="https://example.com"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-400">
               We'll extract brand colors and assets from this URL
             </p>
           </div>
@@ -354,14 +354,14 @@ function NewDeckModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 px-6 py-3 border border-white/20 text-gray-300 rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating...' : 'Create Deck'}
             </button>

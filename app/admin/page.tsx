@@ -162,18 +162,18 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-black/30 backdrop-blur-lg shadow-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="mt-1 text-sm text-gray-500">Manage platform settings and integrations</p>
+              <h1 className="text-3xl font-bold text-white">Admin Panel</h1>
+              <p className="mt-1 text-sm text-gray-300">Manage platform settings and integrations</p>
             </div>
             <Link
               href="/dashboard"
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors backdrop-blur-sm"
             >
               ← Back to Dashboard
             </Link>
@@ -185,17 +185,17 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 gap-6">
           {/* Integrations Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">🔌 Integrations</h2>
-              <p className="mt-1 text-sm text-gray-600">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden border border-white/20">
+            <div className="px-6 py-5 border-b border-white/10">
+              <h2 className="text-xl font-bold text-white">🔌 Integrations</h2>
+              <p className="mt-1 text-sm text-gray-300">
                 Manage API keys for external services
               </p>
             </div>
 
             <div className="px-6 py-6">
               {apiKeys.length > 0 && apiKeys[0].value === '' && (
-                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-200 text-sm backdrop-blur-sm">
                   <strong>⚠️ Authentication Issue Detected</strong>
                   <p className="mt-2">
                     If you just logged in and see empty fields, you may need to clear your browser cookies and log in again.
@@ -210,21 +210,21 @@ export default function AdminPage() {
               )}
 
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
                   {error}
                 </div>
               )}
 
               {success && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
+                <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
                   {success}
                 </div>
               )}
 
               <div className="space-y-6">
                 {apiKeys.map((apiKey) => (
-                  <div key={apiKey.key} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <div key={apiKey.key} className="border-b border-white/10 pb-6 last:border-0 last:pb-0">
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">
                       {apiKey.description}
                     </label>
                     <div className="flex gap-3">
@@ -233,7 +233,7 @@ export default function AdminPage() {
                         value={editedKeys[apiKey.key] || ''}
                         onChange={(e) => setEditedKeys({ ...editedKeys, [apiKey.key]: e.target.value })}
                         placeholder="Enter API key"
-                        className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                        className="flex-1 px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
                       />
                       <button
                         type="button"
@@ -243,14 +243,14 @@ export default function AdminPage() {
                             input.type = input.type === 'password' ? 'text' : 'password';
                           }
                         }}
-                        className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-4 py-2 border-2 border-white/20 bg-white/10 rounded-lg hover:bg-white/20 transition-colors backdrop-blur-sm text-white"
                         title="Toggle visibility"
                       >
                         👁️
                       </button>
                     </div>
-                    <p className="mt-2 text-xs text-gray-500">
-                      Key name: <code className="bg-gray-100 px-2 py-1 rounded">{apiKey.key}</code>
+                    <p className="mt-2 text-xs text-gray-400">
+                      Key name: <code className="bg-white/10 px-2 py-1 rounded text-gray-300">{apiKey.key}</code>
                     </p>
                   </div>
                 ))}
@@ -269,10 +269,10 @@ export default function AdminPage() {
           </div>
 
           {/* AI Settings Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">🤖 AI Settings</h2>
-              <p className="mt-1 text-sm text-gray-600">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden border border-white/20">
+            <div className="px-6 py-5 border-b border-white/10">
+              <h2 className="text-xl font-bold text-white">🤖 AI Settings</h2>
+              <p className="mt-1 text-sm text-gray-300">
                 Configure AI prompt instructions for each service
               </p>
             </div>
@@ -281,10 +281,10 @@ export default function AdminPage() {
               <div className="space-y-8">
                 {/* Claude System Prompt */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2">
                     Claude System Prompt
                   </label>
-                  <p className="text-xs text-gray-600 mb-3">
+                  <p className="text-xs text-gray-400 mb-3">
                     System-level instructions for Claude AI when generating pitch decks. This defines the AI's behavior and expertise.
                   </p>
                   <textarea
@@ -292,16 +292,16 @@ export default function AdminPage() {
                     onChange={(e) => setPrompts({ ...prompts, claude_system_prompt: e.target.value })}
                     rows={8}
                     placeholder="You are an expert pitch deck creator. Create compelling, professional pitch decks..."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical text-white placeholder-gray-400 backdrop-blur-sm"
                   />
                 </div>
 
                 {/* Leonardo Generation Prompt */}
-                <div className="pt-6 border-t border-gray-200">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <div className="pt-6 border-t border-white/10">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2">
                     Leonardo.ai Generation Prompt Template
                   </label>
-                  <p className="text-xs text-gray-600 mb-3">
+                  <p className="text-xs text-gray-400 mb-3">
                     Template for generating images with Leonardo.ai. Use placeholders like {'{description}'} for dynamic content.
                   </p>
                   <textarea
@@ -309,16 +309,16 @@ export default function AdminPage() {
                     onChange={(e) => setPrompts({ ...prompts, leonardo_generation_prompt: e.target.value })}
                     rows={6}
                     placeholder="Create a professional, high-quality image: {description}. Style: modern, clean, business-appropriate..."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical text-white placeholder-gray-400 backdrop-blur-sm"
                   />
                 </div>
 
                 {/* IconKit Generation Prompt */}
-                <div className="pt-6 border-t border-gray-200">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <div className="pt-6 border-t border-white/10">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2">
                     IconKit.ai Generation Prompt Template
                   </label>
-                  <p className="text-xs text-gray-600 mb-3">
+                  <p className="text-xs text-gray-400 mb-3">
                     Template for generating icons with IconKit.ai. Use placeholders like {'{concept}'} for dynamic content.
                   </p>
                   <textarea
@@ -326,7 +326,7 @@ export default function AdminPage() {
                     onChange={(e) => setPrompts({ ...prompts, iconkit_generation_prompt: e.target.value })}
                     rows={6}
                     placeholder="Generate a clean, professional icon representing: {concept}. Style: minimalist, vector, single color..."
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical"
+                    className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical text-white placeholder-gray-400 backdrop-blur-sm"
                   />
                 </div>
               </div>

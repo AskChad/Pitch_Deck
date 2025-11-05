@@ -107,15 +107,15 @@ export default function CreateWithAIPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-black/30 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+            <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-2xl font-bold">Create Deck with AI</h1>
+            <h1 className="text-2xl font-bold text-white">Create Deck with AI</h1>
           </div>
         </div>
       </header>
@@ -123,28 +123,28 @@ export default function CreateWithAIPage() {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 py-12">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
             {error}
           </div>
         )}
 
         {generating ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl p-12 text-center">
             <div className="max-w-md mx-auto">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-6"></div>
-              <h2 className="text-2xl font-bold mb-2">Generating Your Pitch Deck</h2>
-              <p className="text-gray-600 mb-4">{progress}</p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-400 mx-auto mb-6"></div>
+              <h2 className="text-2xl font-bold mb-2 text-white">Generating Your Pitch Deck</h2>
+              <p className="text-gray-300 mb-4">{progress}</p>
+              <div className="w-full bg-white/20 rounded-full h-2">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
               </div>
-              <p className="text-sm text-gray-500 mt-4">This may take 30-60 seconds...</p>
+              <p className="text-sm text-gray-400 mt-4">This may take 30-60 seconds...</p>
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl p-8">
             <div className="mb-8">
-              <h2 className="text-xl font-bold mb-2">Let AI Create Your Pitch Deck</h2>
-              <p className="text-gray-600">
+              <h2 className="text-xl font-bold mb-2 text-white">Let AI Create Your Pitch Deck</h2>
+              <p className="text-gray-300">
                 Provide your content, reference materials, and instructions. Our AI will analyze everything
                 and generate a professional pitch deck tailored to your needs.
               </p>
@@ -153,7 +153,7 @@ export default function CreateWithAIPage() {
             <div className="space-y-6">
               {/* Deck Name */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   Deck Name *
                 </label>
                 <input
@@ -161,13 +161,13 @@ export default function CreateWithAIPage() {
                   value={deckName}
                   onChange={(e) => setDeckName(e.target.value)}
                   placeholder="e.g., Series A Funding Pitch"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
                 />
               </div>
 
               {/* Content */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   Content & Description *
                 </label>
                 <textarea
@@ -175,16 +175,16 @@ export default function CreateWithAIPage() {
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Describe your product, company, or idea. Include key points you want to highlight..."
                   rows={8}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
                 />
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-400">
                   The more detail you provide, the better the AI can tailor your deck.
                 </p>
               </div>
 
               {/* Custom Instructions */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   Custom Instructions
                 </label>
                 <textarea
@@ -192,16 +192,16 @@ export default function CreateWithAIPage() {
                   onChange={(e) => setInstructions(e.target.value)}
                   placeholder="Add any specific instructions for the AI (e.g., tone, style, focus areas, target audience...)"
                   rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
                 />
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-400">
                   Optional: Guide the AI with specific requirements or preferences.
                 </p>
               </div>
 
               {/* Website URLs */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   Reference Website URLs
                 </label>
                 <div className="space-y-2">
@@ -212,12 +212,12 @@ export default function CreateWithAIPage() {
                         value={url}
                         onChange={(e) => updateUrl(index, e.target.value)}
                         placeholder="https://example.com"
-                        className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 px-4 py-2 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-400 backdrop-blur-sm"
                       />
                       {websiteUrls.length > 1 && (
                         <button
                           onClick={() => removeUrl(index)}
-                          className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          className="px-4 py-2 text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
                         >
                           Remove
                         </button>
@@ -227,21 +227,21 @@ export default function CreateWithAIPage() {
                 </div>
                 <button
                   onClick={addUrlField}
-                  className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="mt-2 text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
                 >
                   + Add Another URL
                 </button>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-400">
                   Add URLs to websites the AI should reference (company site, competitors, etc.)
                 </p>
               </div>
 
               {/* File Upload */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   Reference Documents
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                <div className="border-2 border-dashed border-white/20 bg-white/5 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-white/10 transition-colors backdrop-blur-sm">
                   <input
                     type="file"
                     multiple
@@ -267,10 +267,10 @@ export default function CreateWithAIPage() {
                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-200">
                       Click to upload files
                     </span>
-                    <span className="text-xs text-gray-500 mt-1">
+                    <span className="text-xs text-gray-400 mt-1">
                       PDF, DOC, DOCX, TXT, MD
                     </span>
                   </label>
@@ -281,11 +281,11 @@ export default function CreateWithAIPage() {
                     {files.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm border border-white/10 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <svg
-                            className="w-5 h-5 text-gray-500"
+                            className="w-5 h-5 text-gray-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -298,15 +298,15 @@ export default function CreateWithAIPage() {
                             />
                           </svg>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-sm font-medium text-white">{file.name}</p>
+                            <p className="text-xs text-gray-400">
                               {(file.size / 1024).toFixed(1)} KB
                             </p>
                           </div>
                         </div>
                         <button
                           onClick={() => removeFile(index)}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-300 hover:text-red-200 transition-colors"
                         >
                           <svg
                             className="w-5 h-5"
@@ -326,21 +326,21 @@ export default function CreateWithAIPage() {
                     ))}
                   </div>
                 )}
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-400">
                   Upload documents the AI should reference (pitch decks, reports, briefs, etc.)
                 </p>
               </div>
 
               {/* Generate Button */}
-              <div className="pt-6 border-t border-gray-200">
+              <div className="pt-6 border-t border-white/10">
                 <button
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-2xl"
                 >
                   {generating ? 'Generating...' : '✨ Generate Pitch Deck with AI'}
                 </button>
-                <p className="text-center text-sm text-gray-500 mt-3">
+                <p className="text-center text-sm text-gray-400 mt-3">
                   Powered by Claude AI
                 </p>
               </div>
