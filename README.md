@@ -24,6 +24,15 @@ An AI-powered pitch deck creation platform that enables you to create stunning p
 - Progress tracking and slide thumbnails
 - Speaker notes support
 
+### 📁 Reference Materials
+- Upload reference files (PDFs, PowerPoint, images, videos)
+- Drag-and-drop file upload interface
+- Organize files by type and tags
+- Link files to specific decks
+- Preview uploaded materials
+- Maximum 100MB per file
+- Secure cloud storage with Supabase Storage
+
 ### 🛠️ Advanced Features
 - Drag-and-drop slide editor
 - Real-time preview
@@ -332,6 +341,31 @@ DELETE /api/decks/[id]     # Delete deck
 ```
 
 **Note**: All deck operations automatically filter by the authenticated user's ID via Row Level Security.
+
+### Reference Materials (Authentication Required)
+```
+GET    /api/reference-materials          # List all reference materials
+       ?deckId=<uuid>                     # Optional: filter by deck
+       ?fileType=<type>                   # Optional: filter by file type
+
+POST   /api/reference-materials/upload   # Upload a file
+Body: FormData {
+  file: File (max 100MB),
+  deckId?: string
+}
+
+GET    /api/reference-materials/[id]     # Get specific file metadata
+PATCH  /api/reference-materials/[id]     # Update file metadata
+Body: {
+  deck_id?: string,
+  tags?: string[],
+  notes?: string
+}
+
+DELETE /api/reference-materials/[id]     # Delete file and metadata
+```
+
+**Supported File Types**: PDF, PPTX, PPT, DOCX, DOC, PNG, JPG, JPEG, GIF, SVG, WEBP, MP4, WEBM, MOV
 
 ## Keyboard Shortcuts (Presentation Mode)
 

@@ -162,3 +162,71 @@ CREATE POLICY "Deck owners can view their deck analytics"
 CREATE POLICY "Anyone can insert analytics"
   ON presentation_analytics FOR INSERT
   WITH CHECK (true);
+
+-- Create reference_materials table for uploaded files
+CREATE TABLE IF NOT EXISTS reference_materials (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  deck_id UUID REFERENCES pitch_decks(id) ON DELETE SET NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  file_size BIGINT NOT NULL,
+  storage_path TEXT NOT NULL,
+  storage_url TEXT,
+  mime_type TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for reference_materials
+CREATE INDEX IF NOT EXISTS idx_reference_materials_user_id ON reference_materials(user_id);
+CREATE INDEX IF NOT EXISTS idx_reference_materials_deck_id ON reference_materials(deck_id);
+CREATE INDEX IF NOT EXISTS idx_reference_materials_file_type ON reference_materials(file_type);
+CREATE INDEX IF NOT EXISTS idx_reference_materials_created_at ON reference_materials(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reference_materials_tags ON reference_materials USING GIN(tags);
+
+-- Enable RLS for reference_materials
+ALTER TABLE reference_materials ENABLE ROW LEVEL SECURITY;
+
+-- Trigger for reference_materials
+DROP TRIGGER IF EXISTS update_reference_materials_updated_at ON reference_materials;
+CREATE TRIGGER update_reference_materials_updated_at
+  BEFORE UPDATE ON reference_materials
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Policies for reference_materials
+CREATE POLICY "Users can view their own reference materials"
+  ON reference_materials FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own reference materials"
+  ON reference_materials FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own reference materials"
+  ON reference_materials FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own reference materials"
+  ON reference_materials FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Create storage bucket for reference materials (run in Supabase dashboard)
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('reference-materials', 'reference-materials', false);
+
+-- Storage policies for reference materials bucket
+-- CREATE POLICY "Users can upload their own files"
+--   ON storage.objects FOR INSERT
+--   WITH CHECK (bucket_id = 'reference-materials' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- CREATE POLICY "Users can view their own files"
+--   ON storage.objects FOR SELECT
+--   USING (bucket_id = 'reference-materials' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- CREATE POLICY "Users can delete their own files"
+--   ON storage.objects FOR DELETE
+--   USING (bucket_id = 'reference-materials' AND auth.uid()::text = (storage.foldername(name))[1]);

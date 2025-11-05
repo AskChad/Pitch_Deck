@@ -86,6 +86,12 @@ function DashboardContent() {
               </h1>
             </div>
             <div className="flex items-center gap-4">
+              <Link
+                href="/reference-materials"
+                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+              >
+                📁 Reference Materials
+              </Link>
               <span className="text-sm text-gray-600">
                 {user?.email}
               </span>
