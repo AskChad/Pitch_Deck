@@ -59,6 +59,17 @@ export default function EditorPage() {
       if (!response.ok) throw new Error('Failed to fetch deck');
 
       const data = await response.json();
+
+      // Ensure deck has at least one slide
+      if (!data.slides || data.slides.length === 0) {
+        data.slides = [{
+          id: `slide-${Date.now()}`,
+          type: 'title',
+          title: 'Welcome to Your Pitch Deck',
+          subtitle: 'Click to edit and start creating',
+        }];
+      }
+
       setDeck(data);
       setLoading(false);
     } catch (err: any) {
@@ -164,6 +175,24 @@ export default function EditorPage() {
           >
             Back to Dashboard
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Safety check for slides
+  if (!deck.slides || deck.slides.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">No Slides Found</h2>
+          <p className="text-gray-700 mb-6">This deck has no slides. Let's add one!</p>
+          <button
+            onClick={() => addSlide('title')}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Add First Slide
+          </button>
         </div>
       </div>
     );
