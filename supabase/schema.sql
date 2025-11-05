@@ -230,3 +230,55 @@ CREATE POLICY "Users can delete their own reference materials"
 -- CREATE POLICY "Users can delete their own files"
 --   ON storage.objects FOR DELETE
 --   USING (bucket_id = 'reference-materials' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Create admin_settings table for API keys and platform configuration
+CREATE TABLE IF NOT EXISTS admin_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  value TEXT,
+  description TEXT,
+  is_encrypted BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for admin_settings
+ALTER TABLE admin_settings ENABLE ROW LEVEL SECURITY;
+
+-- Trigger for admin_settings
+DROP TRIGGER IF EXISTS update_admin_settings_updated_at ON admin_settings;
+CREATE TRIGGER update_admin_settings_updated_at
+  BEFORE UPDATE ON admin_settings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Only allow access if user is admin (check metadata)
+CREATE POLICY "Only admins can view settings"
+  ON admin_settings FOR SELECT
+  USING (
+    (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
+  );
+
+CREATE POLICY "Only admins can insert settings"
+  ON admin_settings FOR INSERT
+  WITH CHECK (
+    (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
+  );
+
+CREATE POLICY "Only admins can update settings"
+  ON admin_settings FOR UPDATE
+  USING (
+    (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
+  );
+
+CREATE POLICY "Only admins can delete settings"
+  ON admin_settings FOR DELETE
+  USING (
+    (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
+  );
+
+-- Insert default API key entries
+INSERT INTO admin_settings (key, description) VALUES
+  ('leonardo_api_key', 'Leonardo.ai API Key for image generation'),
+  ('iconkit_api_key', 'IconKit.ai API Key for icon generation')
+ON CONFLICT (key) DO NOTHING;

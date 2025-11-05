@@ -92,6 +92,14 @@ function DashboardContent() {
               >
                 📁 Reference Materials
               </Link>
+              {(user as any)?.user_metadata?.is_admin && (
+                <Link
+                  href="/admin"
+                  className="px-4 py-2 text-sm font-semibold text-blue-700 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  ⚙️ Admin
+                </Link>
+              )}
               <span className="text-sm text-gray-600">
                 {user?.email}
               </span>
