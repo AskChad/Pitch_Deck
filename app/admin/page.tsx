@@ -22,6 +22,11 @@ export default function AdminPage() {
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [editedKeys, setEditedKeys] = useState<Record<string, string>>({});
+  const [prompts, setPrompts] = useState<Record<string, string>>({
+    claude_system_prompt: '',
+    leonardo_generation_prompt: '',
+    iconkit_generation_prompt: '',
+  });
 
   useEffect(() => {
     checkAdminAccess();
@@ -68,14 +73,34 @@ export default function AdminPage() {
       }
 
       const data = await response.json();
-      setApiKeys(data);
+
+      // Separate API keys from prompts
+      const keys = data.filter((item: ApiKey) =>
+        item.key.endsWith('_api_key')
+      );
+      const promptSettings = data.filter((item: ApiKey) =>
+        item.key.includes('_prompt')
+      );
+
+      setApiKeys(keys);
 
       // Initialize edited keys
       const initialKeys: Record<string, string> = {};
-      data.forEach((item: ApiKey) => {
+      keys.forEach((item: ApiKey) => {
         initialKeys[item.key] = item.value || '';
       });
       setEditedKeys(initialKeys);
+
+      // Initialize prompts
+      const initialPrompts: Record<string, string> = {
+        claude_system_prompt: '',
+        leonardo_generation_prompt: '',
+        iconkit_generation_prompt: '',
+      };
+      promptSettings.forEach((item: ApiKey) => {
+        initialPrompts[item.key] = item.value || '';
+      });
+      setPrompts(initialPrompts);
     } catch (err: any) {
       // On error, still show default inputs
       const defaultKeys: ApiKey[] = [
@@ -101,15 +126,18 @@ export default function AdminPage() {
     setSuccess('');
 
     try {
+      // Combine API keys and prompts
+      const allSettings = { ...editedKeys, ...prompts };
+
       const response = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: editedKeys }),
+        body: JSON.stringify({ settings: allSettings }),
       });
 
       if (!response.ok) throw new Error('Failed to save settings');
 
-      setSuccess('API keys saved successfully!');
+      setSuccess('Settings saved successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(err.message);
@@ -235,6 +263,81 @@ export default function AdminPage() {
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? 'Saving...' : 'Save API Keys'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Settings Card */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">🤖 AI Settings</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Configure AI prompt instructions for each service
+              </p>
+            </div>
+
+            <div className="px-6 py-6">
+              <div className="space-y-8">
+                {/* Claude System Prompt */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Claude System Prompt
+                  </label>
+                  <p className="text-xs text-gray-600 mb-3">
+                    System-level instructions for Claude AI when generating pitch decks. This defines the AI's behavior and expertise.
+                  </p>
+                  <textarea
+                    value={prompts.claude_system_prompt}
+                    onChange={(e) => setPrompts({ ...prompts, claude_system_prompt: e.target.value })}
+                    rows={8}
+                    placeholder="You are an expert pitch deck creator. Create compelling, professional pitch decks..."
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical"
+                  />
+                </div>
+
+                {/* Leonardo Generation Prompt */}
+                <div className="pt-6 border-t border-gray-200">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Leonardo.ai Generation Prompt Template
+                  </label>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Template for generating images with Leonardo.ai. Use placeholders like {'{description}'} for dynamic content.
+                  </p>
+                  <textarea
+                    value={prompts.leonardo_generation_prompt}
+                    onChange={(e) => setPrompts({ ...prompts, leonardo_generation_prompt: e.target.value })}
+                    rows={6}
+                    placeholder="Create a professional, high-quality image: {description}. Style: modern, clean, business-appropriate..."
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical"
+                  />
+                </div>
+
+                {/* IconKit Generation Prompt */}
+                <div className="pt-6 border-t border-gray-200">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    IconKit.ai Generation Prompt Template
+                  </label>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Template for generating icons with IconKit.ai. Use placeholders like {'{concept}'} for dynamic content.
+                  </p>
+                  <textarea
+                    value={prompts.iconkit_generation_prompt}
+                    onChange={(e) => setPrompts({ ...prompts, iconkit_generation_prompt: e.target.value })}
+                    rows={6}
+                    placeholder="Generate a clean, professional icon representing: {concept}. Style: minimalist, vector, single color..."
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : 'Save AI Settings'}
                 </button>
               </div>
             </div>
