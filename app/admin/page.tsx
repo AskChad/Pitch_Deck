@@ -53,6 +53,7 @@ export default function AdminPage() {
         const defaultKeys: ApiKey[] = [
           { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation' },
           { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation' },
+          { key: 'claude_api_key', value: '', description: 'Anthropic Claude API Key for AI content generation' },
         ];
         setApiKeys(defaultKeys);
 
@@ -80,6 +81,7 @@ export default function AdminPage() {
       const defaultKeys: ApiKey[] = [
         { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation' },
         { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation' },
+        { key: 'claude_api_key', value: '', description: 'Anthropic Claude API Key for AI content generation' },
       ];
       setApiKeys(defaultKeys);
 
