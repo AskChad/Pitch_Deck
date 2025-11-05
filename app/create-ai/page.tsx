@@ -14,6 +14,7 @@ export default function CreateWithAIPage() {
   const [instructions, setInstructions] = useState('');
   const [websiteUrls, setWebsiteUrls] = useState(['']);
   const [files, setFiles] = useState<File[]>([]);
+  const [buildOnly, setBuildOnly] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
@@ -62,6 +63,7 @@ export default function CreateWithAIPage() {
       formData.append('name', deckName);
       formData.append('content', content);
       formData.append('instructions', instructions);
+      formData.append('buildOnly', buildOnly.toString());
 
       // Add URLs
       const validUrls = websiteUrls.filter(url => url.trim());
@@ -197,6 +199,27 @@ export default function CreateWithAIPage() {
                 <p className="mt-1 text-sm text-gray-400">
                   Optional: Guide the AI with specific requirements or preferences.
                 </p>
+              </div>
+
+              {/* Build Only Mode */}
+              <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-lg p-4 backdrop-blur-sm">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={buildOnly}
+                    onChange={(e) => setBuildOnly(e.target.checked)}
+                    className="mt-1 w-5 h-5 rounded border-white/20 bg-white/10 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-sm font-semibold text-blue-200 block mb-1">
+                      Build Only Mode
+                    </span>
+                    <p className="text-xs text-gray-300">
+                      Enable this if you have exact layout, slide structure, and image descriptions in your instructions.
+                      AI will use ONLY your provided content and image instructions without adding creative interpretation.
+                    </p>
+                  </div>
+                </label>
               </div>
 
               {/* Website URLs */}

@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     const name = formData.get('name') as string;
     const content = formData.get('content') as string;
     const instructions = formData.get('instructions') as string;
+    const buildOnly = formData.get('buildOnly') === 'true';
     const urlsJson = formData.get('urls') as string;
     const urls = urlsJson ? JSON.parse(urlsJson) : [];
     const files = formData.getAll('files') as File[];
@@ -29,7 +30,19 @@ export async function POST(request: NextRequest) {
       .in('key', ['claude_api_key', 'claude_system_prompt']);
 
     const claudeApiKey = settings?.find(s => s.key === 'claude_api_key')?.value;
-    const systemPrompt = settings?.find(s => s.key === 'claude_system_prompt')?.value ||
+
+    // Use different system prompt for Build Only mode
+    const systemPrompt = buildOnly
+      ? `You are a precise pitch deck builder. Your role is to convert user specifications into structured slide decks WITHOUT adding any creative interpretation.
+
+STRICT RULES:
+- Use ONLY the exact content provided by the user
+- Follow their exact structure and layout specifications
+- Use their exact image descriptions without modification
+- Do NOT add, remove, or reorganize content
+- Do NOT suggest improvements or alternatives
+- Act as a pure conversion tool from user specs to JSON format`
+      : (settings?.find(s => s.key === 'claude_system_prompt')?.value ||
       `You are an expert pitch deck creator and storyteller. Your mission is to transform ideas into compelling visual narratives.
 
 CORE PRINCIPLES:
@@ -63,7 +76,7 @@ VISUAL SUGGESTIONS:
 - Suggest data visualization types (bar chart, line graph, pie chart, etc.)
 
 OUTPUT FORMAT:
-Return pure JSON with compelling content and visual guidance.`;
+Return pure JSON with compelling content and visual guidance.`);
 
     if (!claudeApiKey) {
       return NextResponse.json(
@@ -106,7 +119,26 @@ Return pure JSON with compelling content and visual guidance.`;
     }
 
     // Build prompt for Claude
-    const prompt = `
+    const prompt = buildOnly ? `
+IMPORTANT: BUILD ONLY MODE - Use ONLY the exact content and structure provided by the user.
+
+## User's Exact Content:
+${content}
+
+${instructions ? `## User's Exact Instructions & Layout:\n${instructions}\n` : ''}
+
+${referenceMaterials}
+
+BUILD ONLY MODE RULES:
+- Use ONLY the content, structure, and layout the user has provided
+- Follow their exact slide structure if specified
+- Use their exact image descriptions if provided
+- Do NOT add creative interpretation or additional content
+- Do NOT reorganize their structure
+- Do NOT suggest alternative layouts
+- Simply convert their specifications into the JSON format below
+
+Return the result as a JSON object with the following structure:` : `
 Create a professional pitch deck based on the following information:
 
 ## Main Content:
