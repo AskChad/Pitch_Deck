@@ -48,7 +48,23 @@ export default function AdminPage() {
   const fetchApiKeys = async () => {
     try {
       const response = await fetch('/api/admin/settings');
-      if (!response.ok) throw new Error('Failed to fetch API keys');
+      if (!response.ok) {
+        // If API fails, use default keys
+        const defaultKeys: ApiKey[] = [
+          { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation' },
+          { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation' },
+        ];
+        setApiKeys(defaultKeys);
+
+        const initialKeys: Record<string, string> = {};
+        defaultKeys.forEach((item: ApiKey) => {
+          initialKeys[item.key] = '';
+        });
+        setEditedKeys(initialKeys);
+
+        console.error('Failed to fetch API keys, using defaults');
+        return;
+      }
 
       const data = await response.json();
       setApiKeys(data);
@@ -60,7 +76,20 @@ export default function AdminPage() {
       });
       setEditedKeys(initialKeys);
     } catch (err: any) {
-      setError(err.message);
+      // On error, still show default inputs
+      const defaultKeys: ApiKey[] = [
+        { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation' },
+        { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation' },
+      ];
+      setApiKeys(defaultKeys);
+
+      const initialKeys: Record<string, string> = {};
+      defaultKeys.forEach((item: ApiKey) => {
+        initialKeys[item.key] = '';
+      });
+      setEditedKeys(initialKeys);
+
+      console.error('Error fetching API keys:', err.message);
     }
   };
 
@@ -135,6 +164,21 @@ export default function AdminPage() {
             </div>
 
             <div className="px-6 py-6">
+              {apiKeys.length > 0 && apiKeys[0].value === '' && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                  <strong>⚠️ Authentication Issue Detected</strong>
+                  <p className="mt-2">
+                    If you just logged in and see empty fields, you may need to clear your browser cookies and log in again.
+                    This happens when switching between different Supabase instances.
+                  </p>
+                  <ol className="mt-2 ml-4 list-decimal space-y-1">
+                    <li>Open DevTools (F12) → Application → Storage → Clear site data</li>
+                    <li>Refresh the page</li>
+                    <li>Log in again with your credentials</li>
+                  </ol>
+                </div>
+              )}
+
               {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                   {error}
