@@ -233,6 +233,9 @@ For image: include "imageUrl" (use placeholder if needed)
 `;
 
     // Call Claude API
+    console.log('Calling Claude API with model: claude-3-5-sonnet-20241022');
+    console.log('API key starts with:', claudeApiKey.substring(0, 15) + '...');
+
     let claudeResponse;
     try {
       claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -254,23 +257,31 @@ For image: include "imageUrl" (use placeholder if needed)
           ],
         }),
       });
+
+      console.log('Claude API response status:', claudeResponse.status);
     } catch (err: any) {
       console.error('Failed to call Claude API:', err);
       return NextResponse.json(
-        { error: 'Failed to connect to AI service. Please check your internet connection and try again.' },
+        { error: 'Failed to connect to AI service. Please check your internet connection and try again. Error: ' + err.message },
         { status: 500 }
       );
     }
 
     if (!claudeResponse.ok) {
       const error = await claudeResponse.text();
-      console.error('Claude API error:', error);
+      console.error('Claude API error response:', error);
+      console.error('Claude API status code:', claudeResponse.status);
 
       // Try to parse the error as JSON to get more details
       let errorMessage = 'Failed to generate deck with AI';
+      let errorDetails = '';
+
       try {
         const errorData = JSON.parse(error);
-        const apiError = errorData.error?.message || errorData.message;
+        console.error('Parsed error data:', JSON.stringify(errorData, null, 2));
+
+        const apiError = errorData.error?.message || errorData.message || errorData.error?.type;
+        errorDetails = JSON.stringify(errorData, null, 2);
 
         // Provide user-friendly messages for common errors
         if (claudeResponse.status === 401) {
@@ -279,10 +290,16 @@ For image: include "imageUrl" (use placeholder if needed)
           errorMessage = 'Rate limit reached. Please wait a moment and try again.';
         } else if (claudeResponse.status === 413) {
           errorMessage = 'Content is too large. Please reduce the amount of text, URLs, or uploaded files.';
+        } else if (claudeResponse.status === 400) {
+          errorMessage = `Bad request to Claude API: ${apiError || 'Invalid request format'}`;
+          if (errorData.error?.type) {
+            errorMessage += ` (${errorData.error.type})`;
+          }
         } else if (apiError) {
-          errorMessage = apiError;
+          errorMessage = `Claude API Error: ${apiError}`;
         }
-      } catch {
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError);
         // If not JSON, use the text directly
         if (claudeResponse.status === 401) {
           errorMessage = 'Invalid Claude API key. Please update your API key in Admin Settings.';
@@ -290,13 +307,17 @@ For image: include "imageUrl" (use placeholder if needed)
           errorMessage = 'Rate limit reached. Please wait a moment and try again.';
         } else if (claudeResponse.status === 413) {
           errorMessage = 'Content is too large. Please reduce the amount of text, URLs, or uploaded files.';
+        } else if (claudeResponse.status === 400) {
+          errorMessage = `Bad request to Claude API. Status: ${claudeResponse.status}. Response: ${error.substring(0, 200)}`;
         } else {
-          errorMessage = error.substring(0, 200); // Limit error message length
+          errorMessage = `API Error (${claudeResponse.status}): ${error.substring(0, 200)}`;
         }
       }
 
+      console.error('Final error message to user:', errorMessage);
+
       return NextResponse.json(
-        { error: errorMessage },
+        { error: errorMessage, details: errorDetails },
         { status: claudeResponse.status }
       );
     }
