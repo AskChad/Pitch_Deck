@@ -15,6 +15,7 @@ export default function CreateWithAIPage() {
   const [websiteUrls, setWebsiteUrls] = useState(['']);
   const [files, setFiles] = useState<File[]>([]);
   const [buildOnly, setBuildOnly] = useState(false);
+  const [fillMissingGraphics, setFillMissingGraphics] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
@@ -64,6 +65,7 @@ export default function CreateWithAIPage() {
       formData.append('content', content);
       formData.append('instructions', instructions);
       formData.append('buildOnly', buildOnly.toString());
+      formData.append('fillMissingGraphics', fillMissingGraphics.toString());
 
       // Add URLs
       const validUrls = websiteUrls.filter(url => url.trim());
@@ -207,7 +209,12 @@ export default function CreateWithAIPage() {
                   <input
                     type="checkbox"
                     checked={buildOnly}
-                    onChange={(e) => setBuildOnly(e.target.checked)}
+                    onChange={(e) => {
+                      setBuildOnly(e.target.checked);
+                      if (!e.target.checked) {
+                        setFillMissingGraphics(false); // Reset when unchecking Build Only
+                      }
+                    }}
                     className="mt-1 w-5 h-5 rounded border-white/20 bg-white/10 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   />
                   <div>
@@ -220,6 +227,28 @@ export default function CreateWithAIPage() {
                     </p>
                   </div>
                 </label>
+
+                {/* Fill Missing Graphics - Only shown when Build Only is enabled */}
+                {buildOnly && (
+                  <div className="mt-3 pl-8 border-l-2 border-blue-400/30">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={fillMissingGraphics}
+                        onChange={(e) => setFillMissingGraphics(e.target.checked)}
+                        className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-purple-600 focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                      />
+                      <div>
+                        <span className="text-xs font-semibold text-purple-200 block mb-1">
+                          Fill Missing Graphics
+                        </span>
+                        <p className="text-xs text-gray-400">
+                          If you didn't specify graphics/images for some slides, AI will suggest appropriate visual elements for those slides only.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Website URLs */}

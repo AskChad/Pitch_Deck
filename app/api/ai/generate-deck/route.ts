@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     const content = formData.get('content') as string;
     const instructions = formData.get('instructions') as string;
     const buildOnly = formData.get('buildOnly') === 'true';
+    const fillMissingGraphics = formData.get('fillMissingGraphics') === 'true';
     const urlsJson = formData.get('urls') as string;
     const urls = urlsJson ? JSON.parse(urlsJson) : [];
     const files = formData.getAll('files') as File[];
@@ -31,9 +32,25 @@ export async function POST(request: NextRequest) {
 
     const claudeApiKey = settings?.find(s => s.key === 'claude_api_key')?.value;
 
-    // Use different system prompt for Build Only mode
-    const systemPrompt = buildOnly
-      ? `You are a precise pitch deck builder. Your role is to convert user specifications into structured slide decks WITHOUT adding any creative interpretation.
+    // Use different system prompt based on mode
+    let systemPrompt: string;
+
+    if (buildOnly && fillMissingGraphics) {
+      systemPrompt = `You are a precise pitch deck builder with visual enhancement capabilities.
+
+STRICT RULES FOR CONTENT:
+- Use ONLY the exact content provided by the user
+- Follow their exact structure and layout specifications
+- Do NOT add, remove, or reorganize content
+- Do NOT suggest improvements to their text or structure
+
+GRAPHICS ENHANCEMENT:
+- For slides WHERE the user HAS specified graphics/images: Use their exact descriptions
+- For slides WHERE the user has NOT specified graphics/images: Suggest appropriate visual elements (charts, diagrams, icons, images)
+- Analyze each slide's content and suggest visuals that enhance the message
+- Recommend specific visualization types where applicable (bar chart, line graph, pie chart, icon, illustration, etc.)`;
+    } else if (buildOnly) {
+      systemPrompt = `You are a precise pitch deck builder. Your role is to convert user specifications into structured slide decks WITHOUT adding any creative interpretation.
 
 STRICT RULES:
 - Use ONLY the exact content provided by the user
@@ -41,8 +58,9 @@ STRICT RULES:
 - Use their exact image descriptions without modification
 - Do NOT add, remove, or reorganize content
 - Do NOT suggest improvements or alternatives
-- Act as a pure conversion tool from user specs to JSON format`
-      : (settings?.find(s => s.key === 'claude_system_prompt')?.value ||
+- Act as a pure conversion tool from user specs to JSON format`;
+    } else {
+      systemPrompt = settings?.find(s => s.key === 'claude_system_prompt')?.value ||
       `You are an expert pitch deck creator and storyteller. Your mission is to transform ideas into compelling visual narratives.
 
 CORE PRINCIPLES:
@@ -76,7 +94,8 @@ VISUAL SUGGESTIONS:
 - Suggest data visualization types (bar chart, line graph, pie chart, etc.)
 
 OUTPUT FORMAT:
-Return pure JSON with compelling content and visual guidance.`);
+Return pure JSON with compelling content and visual guidance.`;
+    }
 
     if (!claudeApiKey) {
       return NextResponse.json(
@@ -119,7 +138,34 @@ Return pure JSON with compelling content and visual guidance.`);
     }
 
     // Build prompt for Claude
-    const prompt = buildOnly ? `
+    let prompt: string;
+
+    if (buildOnly && fillMissingGraphics) {
+      prompt = `
+IMPORTANT: BUILD ONLY MODE WITH GRAPHICS ENHANCEMENT
+
+## User's Exact Content:
+${content}
+
+${instructions ? `## User's Exact Instructions & Layout:\n${instructions}\n` : ''}
+
+${referenceMaterials}
+
+BUILD ONLY MODE RULES:
+- Use ONLY the content, structure, and layout the user has provided
+- Follow their exact slide structure if specified
+- Do NOT add, remove, or reorganize content
+- Do NOT suggest improvements to text or structure
+
+GRAPHICS ENHANCEMENT RULES:
+- For slides where the user HAS specified graphics/images: Use their EXACT descriptions
+- For slides where the user has NOT specified graphics/images: Suggest appropriate visual elements based on the slide content
+- Recommend specific visualization types (bar chart, line graph, pie chart, icon, illustration, photo, diagram, etc.)
+- Make visual suggestions that enhance the message without changing the content
+
+Return the result as a JSON object with the following structure:`;
+    } else if (buildOnly) {
+      prompt = `
 IMPORTANT: BUILD ONLY MODE - Use ONLY the exact content and structure provided by the user.
 
 ## User's Exact Content:
@@ -138,7 +184,9 @@ BUILD ONLY MODE RULES:
 - Do NOT suggest alternative layouts
 - Simply convert their specifications into the JSON format below
 
-Return the result as a JSON object with the following structure:` : `
+Return the result as a JSON object with the following structure:`;
+    } else {
+      prompt = `
 Create a professional pitch deck based on the following information:
 
 ## Main Content:
@@ -148,7 +196,11 @@ ${instructions ? `## Custom Instructions:\n${instructions}\n` : ''}
 
 ${referenceMaterials}
 
-Please create a pitch deck with 8-12 slides. Return the result as a JSON object with the following structure:
+Please create a pitch deck with 8-12 slides. Return the result as a JSON object with the following structure:`;
+    }
+
+    // Add JSON format instructions (same for all modes)
+    prompt += `
 {
   "name": "Deck Title",
   "description": "Brief description",
