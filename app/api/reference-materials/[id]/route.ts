@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 // GET a specific reference material
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createClient();
@@ -17,7 +17,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const { data, error } = await supabase
       .from('reference_materials')
@@ -50,7 +50,7 @@ export async function GET(
 // DELETE a reference material
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createClient();
@@ -63,7 +63,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Get the reference material to get the storage path
     const { data: material, error: fetchError } = await supabase
@@ -115,7 +115,7 @@ export async function DELETE(
 // PATCH update reference material metadata
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createClient();
@@ -128,7 +128,7 @@ export async function PATCH(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { deck_id, tags, notes } = body;
 
