@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 // GET all decks for the current user
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 // POST create a new deck
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 // GET all reference materials for the current user
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
