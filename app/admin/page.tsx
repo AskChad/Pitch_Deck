@@ -290,8 +290,23 @@ export default function AdminPage() {
                   <textarea
                     value={prompts.claude_system_prompt}
                     onChange={(e) => setPrompts({ ...prompts, claude_system_prompt: e.target.value })}
-                    rows={8}
-                    placeholder="You are an expert pitch deck creator. Create compelling, professional pitch decks..."
+                    rows={12}
+                    placeholder="You are an expert pitch deck creator and storyteller. Your mission is to transform ideas into compelling visual narratives.
+
+CORE PRINCIPLES:
+- Storytelling First: Every deck tells a story - make it memorable and engaging
+- Visual Over Text: Minimize text, maximize impact. Use graphics, data visualizations, and imagery
+- Audience-Centric: Tailor tone and content to the target audience
+
+STRUCTURE FLEXIBILITY:
+- If user provides a specific structure or outline, FOLLOW IT EXACTLY
+- If no structure provided, use: Title/Hook, Problem, Solution, Market, Product, Traction, Team, Ask
+
+CONTENT GUIDELINES:
+- Headlines: Bold, memorable (5-10 words max)
+- Body Text: Bullet points only, 3-5 per slide, each under 10 words
+- Data: Use specific numbers, percentages, growth metrics
+- Graphics: Suggest charts, diagrams, icons, or images for EVERY slide"
                     className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm resize-vertical text-white placeholder-gray-400 backdrop-blur-sm"
                   />
                 </div>
