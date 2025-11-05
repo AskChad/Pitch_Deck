@@ -84,12 +84,26 @@ export default function CreateWithAIPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to generate deck');
+        let errorMessage = 'Failed to generate deck';
+        try {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+        } catch {
+          // If response isn't JSON, try to get text
+          const text = await response.text();
+          errorMessage = text.substring(0, 200) || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       setProgress('Creating your pitch deck...');
-      const data = await response.json();
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error('Invalid response from server. Please try again.');
+      }
 
       setProgress('Complete! Redirecting to editor...');
 

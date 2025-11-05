@@ -233,36 +233,93 @@ For image: include "imageUrl" (use placeholder if needed)
 `;
 
     // Call Claude API
-    const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': claudeApiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      }),
-    });
-
-    if (!claudeResponse.ok) {
-      const error = await claudeResponse.text();
-      console.error('Claude API error:', error);
+    let claudeResponse;
+    try {
+      claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': claudeApiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        }),
+      });
+    } catch (err: any) {
+      console.error('Failed to call Claude API:', err);
       return NextResponse.json(
-        { error: 'Failed to generate deck with AI' },
+        { error: 'Failed to connect to AI service. Please check your internet connection and try again.' },
         { status: 500 }
       );
     }
 
-    const claudeData = await claudeResponse.json();
+    if (!claudeResponse.ok) {
+      const error = await claudeResponse.text();
+      console.error('Claude API error:', error);
+
+      // Try to parse the error as JSON to get more details
+      let errorMessage = 'Failed to generate deck with AI';
+      try {
+        const errorData = JSON.parse(error);
+        const apiError = errorData.error?.message || errorData.message;
+
+        // Provide user-friendly messages for common errors
+        if (claudeResponse.status === 401) {
+          errorMessage = 'Invalid Claude API key. Please update your API key in Admin Settings.';
+        } else if (claudeResponse.status === 429) {
+          errorMessage = 'Rate limit reached. Please wait a moment and try again.';
+        } else if (claudeResponse.status === 413) {
+          errorMessage = 'Content is too large. Please reduce the amount of text, URLs, or uploaded files.';
+        } else if (apiError) {
+          errorMessage = apiError;
+        }
+      } catch {
+        // If not JSON, use the text directly
+        if (claudeResponse.status === 401) {
+          errorMessage = 'Invalid Claude API key. Please update your API key in Admin Settings.';
+        } else if (claudeResponse.status === 429) {
+          errorMessage = 'Rate limit reached. Please wait a moment and try again.';
+        } else if (claudeResponse.status === 413) {
+          errorMessage = 'Content is too large. Please reduce the amount of text, URLs, or uploaded files.';
+        } else {
+          errorMessage = error.substring(0, 200); // Limit error message length
+        }
+      }
+
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: claudeResponse.status }
+      );
+    }
+
+    let claudeData;
+    try {
+      claudeData = await claudeResponse.json();
+    } catch (err) {
+      console.error('Failed to parse Claude response as JSON');
+      return NextResponse.json(
+        { error: 'Invalid response from AI service. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    if (!claudeData.content || !claudeData.content[0] || !claudeData.content[0].text) {
+      console.error('Unexpected Claude response structure:', claudeData);
+      return NextResponse.json(
+        { error: 'Unexpected response from AI service. Please try again.' },
+        { status: 500 }
+      );
+    }
+
     const responseText = claudeData.content[0].text;
 
     // Extract JSON from response (Claude might wrap it in markdown)
