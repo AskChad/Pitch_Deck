@@ -288,6 +288,8 @@ For image: include "imageUrl" (use placeholder if needed)
           errorMessage = 'Invalid Claude API key. Please update your API key in Admin Settings.';
         } else if (claudeResponse.status === 429) {
           errorMessage = 'Rate limit reached. Please wait a moment and try again.';
+        } else if (claudeResponse.status === 529) {
+          errorMessage = 'Claude API is currently experiencing high traffic. Please try again in a few moments.';
         } else if (claudeResponse.status === 413) {
           errorMessage = 'Content is too large. Please reduce the amount of text, URLs, or uploaded files.';
         } else if (claudeResponse.status === 400) {
@@ -295,6 +297,8 @@ For image: include "imageUrl" (use placeholder if needed)
           if (errorData.error?.type) {
             errorMessage += ` (${errorData.error.type})`;
           }
+        } else if (errorData.error?.type === 'overloaded_error') {
+          errorMessage = 'Claude API is currently experiencing high traffic. Please try again in a few moments.';
         } else if (apiError) {
           errorMessage = `Claude API Error: ${apiError}`;
         }
@@ -305,6 +309,8 @@ For image: include "imageUrl" (use placeholder if needed)
           errorMessage = 'Invalid Claude API key. Please update your API key in Admin Settings.';
         } else if (claudeResponse.status === 429) {
           errorMessage = 'Rate limit reached. Please wait a moment and try again.';
+        } else if (claudeResponse.status === 529) {
+          errorMessage = 'Claude API is currently experiencing high traffic. Please try again in a few moments.';
         } else if (claudeResponse.status === 413) {
           errorMessage = 'Content is too large. Please reduce the amount of text, URLs, or uploaded files.';
         } else if (claudeResponse.status === 400) {
