@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import Link from 'next/link';
 
 export default function CreateWithAIPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   const [deckName, setDeckName] = useState('');
@@ -119,7 +119,20 @@ export default function CreateWithAIPage() {
     }
   };
 
-  if (!user) {
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only redirect if loading is complete and user is not authenticated
+  if (!loading && !user) {
     router.push('/login');
     return null;
   }
