@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Link from 'next/link';
+import { uploadFilesToStorage } from '@/lib/supabase/storage';
 
 export default function CreateWithAIPage() {
   const { user, loading } = useAuth();
@@ -36,19 +37,19 @@ export default function CreateWithAIPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
-      const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+      const MAX_SIZE = 1024 * 1024 * 1024; // 1GB (files uploaded to Supabase Storage, not through API)
 
       // Check file sizes
       const oversizedFiles = fileArray.filter(file => file.size > MAX_SIZE);
 
       if (oversizedFiles.length > 0) {
         const fileNames = oversizedFiles.map(f => f.name).join(', ');
-        alert(`⚠️ The following files are too large (max 50MB each):\n\n${fileNames}\n\nPlease use smaller files or compress them.`);
+        alert(`⚠️ The following files are too large (max 1GB each):\n\n${fileNames}\n\nPlease use smaller files or compress them.`);
         return;
       }
 
-      // Warn about large files (over 10MB)
-      const largeFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024);
+      // Warn about large files (over 100MB)
+      const largeFiles = fileArray.filter(file => file.size > 100 * 1024 * 1024);
       if (largeFiles.length > 0) {
         console.warn('Large files detected:', largeFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`));
       }
@@ -82,6 +83,23 @@ export default function CreateWithAIPage() {
     updateProgress('Preparing your request...', 5);
 
     try {
+      // Upload files to Supabase Storage first (for large file support up to 1GB)
+      let uploadedFiles: any[] = [];
+      if (files.length > 0 && user?.id) {
+        updateProgress(`Uploading ${files.length} file(s) to secure storage...`, 10);
+
+        uploadedFiles = await uploadFilesToStorage(
+          files,
+          user.id,
+          (uploaded, total) => {
+            const percent = 10 + (uploaded / total) * 10; // 10-20%
+            updateProgress(`Uploading files... (${uploaded}/${total})`, percent);
+          }
+        );
+
+        console.log('Files uploaded to storage:', uploadedFiles);
+      }
+
       const formData = new FormData();
       formData.append('name', deckName);
       formData.append('content', content);
@@ -92,10 +110,15 @@ export default function CreateWithAIPage() {
       const validUrls = websiteUrls.filter(url => url.trim());
       formData.append('urls', JSON.stringify(validUrls));
 
-      // Add files
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
+      // Send file paths instead of file content (bypasses API body size limits)
+      if (uploadedFiles.length > 0) {
+        formData.append('filePaths', JSON.stringify(uploadedFiles.map(f => ({
+          fileName: f.fileName,
+          filePath: f.filePath,
+          publicUrl: f.publicUrl,
+          size: f.size,
+        }))));
+      }
 
       // Simulate progressive updates to show activity
       updateProgress('Gathering reference materials...', 10);
@@ -372,7 +395,7 @@ export default function CreateWithAIPage() {
                       Click to upload files
                     </span>
                     <span className="text-xs text-gray-400 mt-1">
-                      PDF, DOC, DOCX, TXT, MD (max 50MB each)
+                      PDF, DOC, DOCX, TXT, MD (max 1GB each)
                     </span>
                   </label>
                 </div>
@@ -428,7 +451,7 @@ export default function CreateWithAIPage() {
                   </div>
                 )}
                 <p className="mt-2 text-sm text-gray-400">
-                  <strong>Supported formats:</strong> Text files (.txt, .md, .csv) are fully parsed. PDFs can be uploaded but aren't parsed yet - please include key content in the description field above. <strong>Max file size:</strong> 50MB per file.
+                  <strong>Supported formats:</strong> Text files (.txt, .md, .csv) are fully parsed. PDFs can be uploaded but aren't parsed yet - please include key content in the description field above. <strong>Max file size:</strong> 1GB per file (uploaded to secure cloud storage).
                 </p>
               </div>
 

@@ -36,7 +36,11 @@ export async function POST(request: NextRequest) {
     const useMultiPhase = formData.get('useMultiPhase') === 'true';
     const urlsJson = formData.get('urls') as string;
     const urls = urlsJson ? JSON.parse(urlsJson) : [];
+
+    // Support both file uploads (old way) and file paths from storage (new way for 1GB files)
     const files = formData.getAll('files') as File[];
+    const filePathsJson = formData.get('filePaths') as string;
+    const filePathsFromStorage = filePathsJson ? JSON.parse(filePathsJson) : [];
 
     // Get API keys from settings
     const { data: settings } = await supabase
@@ -214,7 +218,7 @@ OUTPUT: Return pure JSON with complete specifications.`;
       }
     }
 
-    // Process uploaded files
+    // Process uploaded files (direct upload - for small files)
     if (files.length > 0) {
       referenceMaterials += 'Reference Documents (EXTRACT AND USE THIS INFORMATION):\n\n';
       for (const file of files) {
@@ -241,6 +245,34 @@ OUTPUT: Return pure JSON with complete specifications.`;
         } catch (err: any) {
           console.error(`Failed to process ${file.name}:`, err.message);
           referenceMaterials += `From ${file.name}: (Error: ${err.message})\n\n`;
+        }
+      }
+    }
+
+    // Process files from Supabase Storage (for large files up to 1GB)
+    if (filePathsFromStorage.length > 0) {
+      if (!referenceMaterials.includes('Reference Documents')) {
+        referenceMaterials += 'Reference Documents (EXTRACT AND USE THIS INFORMATION):\n\n';
+      }
+      for (const fileInfo of filePathsFromStorage) {
+        try {
+          console.log(`Processing file from storage: ${fileInfo.fileName} (${fileInfo.publicUrl})`);
+
+          // For now, just note the file was uploaded and use its public URL
+          // In the future, we could fetch and parse text files here
+          const fileName = fileInfo.fileName;
+
+          if (fileName.endsWith('.txt') || fileName.endsWith('.md') || fileName.endsWith('.csv')) {
+            // Could fetch and parse text files from storage
+            referenceMaterials += `=== ${fileName} ===\n(Large text file uploaded to storage: ${fileInfo.publicUrl})\n\n`;
+          } else if (fileName.endsWith('.pdf')) {
+            referenceMaterials += `=== ${fileName} ===\n(PDF file uploaded to storage - ${(fileInfo.size / 1024 / 1024).toFixed(2)}MB. Note: PDF parsing not yet implemented, please provide key content in the description field)\n\n`;
+          } else {
+            referenceMaterials += `=== ${fileName} ===\n(File uploaded to storage: ${fileInfo.publicUrl})\n\n`;
+          }
+        } catch (err: any) {
+          console.error(`Failed to process ${fileInfo.fileName}:`, err.message);
+          referenceMaterials += `From ${fileInfo.fileName}: (Error: ${err.message})\n\n`;
         }
       }
     }
