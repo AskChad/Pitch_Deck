@@ -14,7 +14,15 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 max-w-6xl mx-auto">
+          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+            <div className="text-4xl mb-4">📐</div>
+            <h3 className="text-xl font-bold mb-2">Professional Templates</h3>
+            <p className="text-gray-600">
+              Pre-designed slide templates and infographics. AI fills content, you control the design.
+            </p>
+          </div>
+
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
             <div className="text-4xl mb-4">🎨</div>
             <h3 className="text-xl font-bold mb-2">Brand Extraction</h3>
@@ -24,10 +32,10 @@ export default function Home() {
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-            <div className="text-4xl mb-4">🤖</div>
-            <h3 className="text-xl font-bold mb-2">AI-Generated Graphics</h3>
+            <div className="text-4xl mb-4">📊</div>
+            <h3 className="text-xl font-bold mb-2">Animated Infographics</h3>
             <p className="text-gray-600">
-              Create custom graphics and icons using Leonardo.ai and IconKit.ai APIs
+              5 pre-designed data visualization templates with smooth SVG animations
             </p>
           </div>
 
@@ -46,7 +54,13 @@ export default function Home() {
           <p className="text-gray-600 mb-8">
             Sign up now and start creating amazing pitch decks with AI
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-4 justify-center flex-wrap">
+            <a
+              href="/templates"
+              className="px-8 py-4 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+            >
+              View Templates
+            </a>
             <a
               href="/signup"
               className="px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
