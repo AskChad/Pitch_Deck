@@ -64,6 +64,16 @@ export interface FinalDeck {
 }
 
 /**
+ * Conversation thread for maintaining context across all phases
+ */
+interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+let conversationThread: ConversationMessage[] = [];
+
+/**
  * Phase 1: Content Strategy
  * Pure content focus - no design decisions
  */
@@ -71,8 +81,14 @@ export async function phase1_generateContent(
   apiKey: string,
   userPrompt: string,
   referenceMaterials: string,
-  instructions?: string
+  instructions?: string,
+  resetThread: boolean = true
 ): Promise<Phase1ContentOutput> {
+
+  // Reset conversation thread for new deck
+  if (resetThread) {
+    conversationThread = [];
+  }
 
   const systemPrompt = `You are a presentation content strategist who creates compelling slide messaging.
 
@@ -135,6 +151,9 @@ Return JSON in this exact format:
   ]
 }`;
 
+  // Add user message to conversation thread
+  conversationThread.push({ role: 'user', content: userPromptText });
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -146,7 +165,7 @@ Return JSON in this exact format:
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 4096,
       system: systemPrompt,
-      messages: [{ role: 'user', content: userPromptText }],
+      messages: conversationThread,
     }),
   });
 
@@ -157,6 +176,10 @@ Return JSON in this exact format:
 
   const data = await response.json();
   const text = data.content[0].text;
+
+  // Add assistant's response to conversation thread
+  conversationThread.push({ role: 'assistant', content: text });
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
 
   if (!jsonMatch) {
@@ -282,6 +305,9 @@ Return JSON in this exact format:
   ]
 }`;
 
+  // Continue conversation thread from Phase 1
+  conversationThread.push({ role: 'user', content: userPromptText });
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -293,7 +319,7 @@ Return JSON in this exact format:
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 8192,
       system: systemPrompt,
-      messages: [{ role: 'user', content: userPromptText }],
+      messages: conversationThread,
     }),
   });
 
@@ -304,6 +330,10 @@ Return JSON in this exact format:
 
   const data = await response.json();
   const text = data.content[0].text;
+
+  // Add assistant's response to conversation thread
+  conversationThread.push({ role: 'assistant', content: text });
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
 
   if (!jsonMatch) {
