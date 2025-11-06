@@ -4,6 +4,7 @@
  */
 
 import { PROFESSIONAL_TEMPLATES, applyBrandColors, selectTemplatesForDeck, SlideTemplate } from '../templates/slide-templates';
+import { generateInfographic, INFOGRAPHIC_TEMPLATES } from '../templates/infographic-templates';
 
 interface TemplateBasedOutput {
   name: string;
@@ -80,10 +81,15 @@ SLIDE TYPES:
 - title: Opening slide
 - problem: Problem statement
 - solution: How you solve it
-- stats: Data/metrics (provide 2-3 specific numbers)
-- process: Step-by-step (provide 3-4 steps)
-- comparison: Before vs After
+- stats: Data/metrics (provide EXACTLY 3 stats with numbers and labels - will generate infographic)
+- process: Step-by-step (provide EXACTLY 4 steps - will generate process flow infographic)
+- comparison: Before vs After (provide specific metrics if possible - will generate comparison chart)
 - cta: Call to action
+
+INFOGRAPHIC DATA REQUIREMENTS:
+- stats slides: Provide exactly 3 stats with {"number": "95%", "label": "Success Rate"} format
+- process slides: Provide exactly 4 steps in "Step Name: Description" format
+- comparison slides: Provide before/after metrics with numbers if possible
 
 Extract ALL specific data from reference materials. Use real numbers, real processes, real quotes.
 
@@ -99,6 +105,7 @@ Return JSON only:
       "body": "Additional text if needed (300 chars max)",
       "bulletPoints": ["point 1", "point 2"],
       "stats": [{"number": "95%", "label": "Success rate"}],
+      "comparisonMetrics": [{"label": "Response Time", "before": 45, "after": 95}],
       "imagePrompt": "Specific description for illustration"
     }
   ]
@@ -182,17 +189,53 @@ function fillTemplate(
     case 'stats':
       slide.title = content.headline || '';
       slide.stats = content.stats || [];
+
+      // Generate infographic if we have stat data
+      if (content.stats && content.stats.length === 3) {
+        const infographicData = {
+          stats: content.stats.map((stat: any) => ({
+            value: stat.number,
+            label: stat.label,
+            icon: 'check'
+          }))
+        };
+        slide.infographic = generateInfographic('stat-cards-3', infographicData, brandColors);
+      }
       break;
 
     case 'process':
       slide.title = content.headline || '';
       slide.steps = content.bulletPoints || [];
+
+      // Generate process flow infographic if we have 4 steps
+      if (content.bulletPoints && content.bulletPoints.length === 4) {
+        const infographicData = {
+          steps: content.bulletPoints.map((step: string, i: number) => ({
+            number: i + 1,
+            title: step.split(':')[0] || step.substring(0, 20),
+            description: step.split(':')[1]?.trim() || step.substring(0, 50)
+          }))
+        };
+        slide.infographic = generateInfographic('process-flow-4', infographicData, brandColors);
+      }
       break;
 
     case 'comparison':
       slide.title = content.headline || '';
       slide.leftContent = content.bulletPoints?.slice(0, 3).join('\n• ') || '';
       slide.rightContent = content.bulletPoints?.slice(3).join('\n• ') || '';
+
+      // Generate comparison infographic if we have before/after metrics
+      if (content.comparisonMetrics && content.comparisonMetrics.length >= 3) {
+        const infographicData = {
+          comparisons: content.comparisonMetrics.map((metric: any) => ({
+            metric: metric.label,
+            before: metric.before,
+            after: metric.after
+          }))
+        };
+        slide.infographic = generateInfographic('comparison-bars', infographicData, brandColors);
+      }
       break;
 
     case 'cta':
