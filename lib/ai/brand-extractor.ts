@@ -11,8 +11,13 @@ export interface BrandAssets {
     text: string;
   };
   logo?: string;
-  images: string[];
+  favicon?: string;
+  heroImage?: string;
+  productImages: string[];
+  teamImages: string[];
+  allImages: string[];
   companyName?: string;
+  description?: string;
 }
 
 /**
@@ -29,7 +34,9 @@ export async function extractBrandAssets(url: string): Promise<BrandAssets> {
       background: '#ffffff',
       text: '#1f2937',
     },
-    images: [],
+    productImages: [],
+    teamImages: [],
+    allImages: [],
   };
 
   try {
@@ -53,17 +60,42 @@ export async function extractBrandAssets(url: string): Promise<BrandAssets> {
     // Extract logo URL
     const logo = extractLogo(html, url);
 
-    // Extract company name
-    const companyName = extractCompanyName(html);
+    // Extract favicon
+    const favicon = extractFavicon(html, url);
 
-    // Extract images
-    const images = extractImages(html, url);
+    // Extract company name and description
+    const companyName = extractCompanyName(html);
+    const description = extractDescription(html);
+
+    // Extract hero/feature image
+    const heroImage = extractHeroImage(html, url);
+
+    // Extract all images
+    const allImages = extractImages(html, url);
+
+    // Categorize images
+    const productImages = allImages.filter(img =>
+      img.toLowerCase().includes('product') ||
+      img.toLowerCase().includes('screenshot') ||
+      img.toLowerCase().includes('feature')
+    );
+
+    const teamImages = allImages.filter(img =>
+      img.toLowerCase().includes('team') ||
+      img.toLowerCase().includes('about') ||
+      img.toLowerCase().includes('people')
+    );
 
     console.log('Brand extraction complete:', {
       colors: colors.length,
       hasLogo: !!logo,
+      hasFavicon: !!favicon,
+      hasHeroImage: !!heroImage,
       companyName,
-      images: images.length,
+      description: description?.substring(0, 50),
+      productImages: productImages.length,
+      teamImages: teamImages.length,
+      allImages: allImages.length,
     });
 
     return {
@@ -75,8 +107,13 @@ export async function extractBrandAssets(url: string): Promise<BrandAssets> {
         text: defaultAssets.colors.text,
       } : defaultAssets.colors,
       logo,
-      images: images.slice(0, 5), // Limit to 5 images
+      favicon,
+      heroImage,
+      productImages: productImages.slice(0, 10),
+      teamImages: teamImages.slice(0, 5),
+      allImages: allImages.slice(0, 20),
       companyName,
+      description,
     };
 
   } catch (error) {
@@ -110,18 +147,96 @@ function extractColors(html: string): string[] {
 }
 
 function extractLogo(html: string, baseUrl: string): string | undefined {
-  // Try to find logo in meta tags
+  // Try multiple strategies to find logo
+
+  // 1. Look for img with logo in class/id/alt
+  const logoRegex = /<img[^>]+(?:class|id|alt)=["'][^"']*logo[^"']*["'][^>]+src=["']([^"']+)["']/i;
+  const logoMatch = html.match(logoRegex);
+  if (logoMatch) {
+    return resolveUrl(logoMatch[1], baseUrl);
+  }
+
+  // 2. Look for img with src containing "logo"
+  const logoSrcRegex = /<img[^>]+src=["']([^"']*logo[^"']+)["']/i;
+  const srcMatch = html.match(logoSrcRegex);
+  if (srcMatch) {
+    return resolveUrl(srcMatch[1], baseUrl);
+  }
+
+  // 3. Try meta og:image (often contains logo)
   const metaLogoRegex = /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i;
   const metaMatch = html.match(metaLogoRegex);
   if (metaMatch) {
     return resolveUrl(metaMatch[1], baseUrl);
   }
 
-  // Try to find logo img tags
-  const logoRegex = /<img[^>]+(?:class|id|alt)=["'][^"']*logo[^"']*["'][^>]+src=["']([^"']+)["']/i;
-  const logoMatch = html.match(logoRegex);
-  if (logoMatch) {
-    return resolveUrl(logoMatch[1], baseUrl);
+  // 4. Try Twitter card image
+  const twitterRegex = /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i;
+  const twitterMatch = html.match(twitterRegex);
+  if (twitterMatch) {
+    return resolveUrl(twitterMatch[1], baseUrl);
+  }
+
+  return undefined;
+}
+
+function extractFavicon(html: string, baseUrl: string): string | undefined {
+  // Look for favicon link tags
+  const faviconRegex = /<link[^>]+rel=["'](?:icon|shortcut icon)["'][^>]+href=["']([^"']+)["']/i;
+  const match = html.match(faviconRegex);
+  if (match) {
+    return resolveUrl(match[1], baseUrl);
+  }
+
+  // Default favicon location
+  try {
+    const base = new URL(baseUrl);
+    return `${base.protocol}//${base.host}/favicon.ico`;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractHeroImage(html: string, baseUrl: string): string | undefined {
+  // Look for hero/featured images
+
+  // 1. og:image (often the hero)
+  const ogRegex = /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i;
+  const ogMatch = html.match(ogRegex);
+  if (ogMatch) {
+    return resolveUrl(ogMatch[1], baseUrl);
+  }
+
+  // 2. Twitter card image
+  const twitterRegex = /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i;
+  const twitterMatch = html.match(twitterRegex);
+  if (twitterMatch) {
+    return resolveUrl(twitterMatch[1], baseUrl);
+  }
+
+  // 3. First large image in hero section
+  const heroRegex = /<(?:section|div)[^>]+(?:class|id)=["'][^"']*(?:hero|banner|featured)[^"']*["'][^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i;
+  const heroMatch = html.match(heroRegex);
+  if (heroMatch) {
+    return resolveUrl(heroMatch[1], baseUrl);
+  }
+
+  return undefined;
+}
+
+function extractDescription(html: string): string | undefined {
+  // Try og:description first
+  const ogRegex = /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i;
+  const ogMatch = html.match(ogRegex);
+  if (ogMatch) {
+    return ogMatch[1];
+  }
+
+  // Try meta description
+  const metaRegex = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i;
+  const metaMatch = html.match(metaRegex);
+  if (metaMatch) {
+    return metaMatch[1];
   }
 
   return undefined;
@@ -147,14 +262,35 @@ function extractCompanyName(html: string): string | undefined {
 
 function extractImages(html: string, baseUrl: string): string[] {
   const images: string[] = [];
+  const seen = new Set<string>();
 
   // Extract from img tags
   const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
   let match;
   while ((match = imgRegex.exec(html)) !== null) {
     const url = resolveUrl(match[1], baseUrl);
-    if (url && !url.includes('data:image') && !url.includes('.svg')) {
+
+    // Filter out tiny images, data URIs, SVGs, and duplicates
+    if (url &&
+        !url.includes('data:image') &&
+        !url.endsWith('.svg') &&
+        !url.includes('icon') &&
+        !url.includes('avatar') &&
+        !url.includes('1x1') &&
+        !url.includes('pixel') &&
+        !seen.has(url)) {
       images.push(url);
+      seen.add(url);
+    }
+  }
+
+  // Also check meta tags for additional images
+  const metaImageRegex = /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]+content=["']([^"']+)["']/gi;
+  while ((match = metaImageRegex.exec(html)) !== null) {
+    const url = resolveUrl(match[1], baseUrl);
+    if (url && !seen.has(url)) {
+      images.push(url);
+      seen.add(url);
     }
   }
 

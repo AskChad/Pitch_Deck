@@ -14,8 +14,6 @@ export default function CreateWithAIPage() {
   const [instructions, setInstructions] = useState('');
   const [websiteUrls, setWebsiteUrls] = useState(['']);
   const [files, setFiles] = useState<File[]>([]);
-  const [buildOnly, setBuildOnly] = useState(false);
-  const [fillMissingGraphics, setFillMissingGraphics] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
@@ -70,8 +68,7 @@ export default function CreateWithAIPage() {
       formData.append('name', deckName);
       formData.append('content', content);
       formData.append('instructions', instructions);
-      formData.append('buildOnly', buildOnly.toString());
-      formData.append('fillMissingGraphics', fillMissingGraphics.toString());
+      formData.append('useMultiPhase', 'true'); // Always use professional multi-phase generation
 
       // Add URLs
       const validUrls = websiteUrls.filter(url => url.trim());
@@ -98,23 +95,23 @@ export default function CreateWithAIPage() {
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         if (elapsed < 5000) {
-          updateProgress('AI is reading your requirements...', 30);
+          updateProgress('Phase 1: Extracting brand assets from URLs...', 25);
         } else if (elapsed < 10000) {
-          updateProgress('AI is crafting your story...', 40);
+          updateProgress('Phase 1: Analyzing content strategy...', 35);
         } else if (elapsed < 15000) {
-          updateProgress('AI is designing slide structure...', 50);
+          updateProgress('Phase 1: Planning slide messaging...', 40);
         } else if (elapsed < 20000) {
-          updateProgress('AI is creating slide 1...', 55);
+          updateProgress('Phase 2: Designing visual layouts...', 50);
         } else if (elapsed < 25000) {
-          updateProgress('AI is creating slide 2...', 60);
+          updateProgress('Phase 2: Creating detailed graphic prompts...', 60);
         } else if (elapsed < 30000) {
-          updateProgress('AI is creating slide 3...', 65);
-        } else if (elapsed < 35000) {
-          updateProgress('AI is adding visual recommendations...', 75);
+          updateProgress('Phase 3: Generating custom images...', 70);
         } else if (elapsed < 40000) {
-          updateProgress('AI is finalizing your deck...', 85);
+          updateProgress('Phase 3: Creating infographics...', 80);
+        } else if (elapsed < 50000) {
+          updateProgress('Phase 4: Assembling final deck...', 90);
         } else {
-          updateProgress('Almost done...', 90);
+          updateProgress('Almost done...', 95);
         }
       }, 2000);
 
@@ -204,27 +201,36 @@ export default function CreateWithAIPage() {
         {generating ? (
           <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl p-12 text-center">
             <div className="max-w-md mx-auto">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-400 mx-auto mb-6"></div>
-              <h2 className="text-2xl font-bold mb-2 text-white">Generating Your Pitch Deck</h2>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-400 mx-auto mb-6"></div>
+              <h2 className="text-2xl font-bold mb-2 text-white">✨ Creating Your Professional Deck</h2>
               <p className="text-gray-300 mb-4">{progress}</p>
               <div className="w-full bg-white/20 rounded-full h-3 mb-2">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out"
+                  className="bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
-              <p className="text-sm font-semibold text-blue-300">{progressPercent}%</p>
-              <p className="text-sm text-gray-400 mt-4">This may take 30-60 seconds...</p>
+              <p className="text-sm font-semibold text-purple-300">{progressPercent}%</p>
+              <p className="text-sm text-gray-400 mt-4">Running 4-phase professional generation...</p>
+              <p className="text-xs text-gray-500 mt-2">This may take 1-2 minutes for best quality</p>
             </div>
           </div>
         ) : (
           <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl p-8">
             <div className="mb-8">
-              <h2 className="text-xl font-bold mb-2 text-white">Let AI Create Your Pitch Deck</h2>
-              <p className="text-gray-300">
-                Provide your content, reference materials, and instructions. Our AI will analyze everything
-                and generate a professional pitch deck tailored to your needs.
+              <h2 className="text-xl font-bold mb-2 text-white">✨ Create Professional Pitch Decks with AI</h2>
+              <p className="text-gray-300 mb-3">
+                Our advanced AI system uses a 4-phase approach to create stunning, professional pitch decks with minimal text and maximum visual impact.
               </p>
+              <div className="bg-purple-500/10 border border-purple-400/30 rounded-lg p-4 backdrop-blur-sm">
+                <p className="text-sm text-purple-200 font-semibold mb-2">What makes this special:</p>
+                <ul className="text-xs text-gray-300 space-y-1">
+                  <li>• Extracts brand colors, logos, and images from your website URLs</li>
+                  <li>• Learns from example pitch decks you upload</li>
+                  <li>• Creates custom graphics and infographics for every slide</li>
+                  <li>• Follows professional design principles for visual storytelling</li>
+                </ul>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -276,58 +282,10 @@ export default function CreateWithAIPage() {
                 </p>
               </div>
 
-              {/* Build Only Mode */}
-              <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-lg p-4 backdrop-blur-sm">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={buildOnly}
-                    onChange={(e) => {
-                      setBuildOnly(e.target.checked);
-                      if (!e.target.checked) {
-                        setFillMissingGraphics(false); // Reset when unchecking Build Only
-                      }
-                    }}
-                    className="mt-1 w-5 h-5 rounded border-white/20 bg-white/10 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <div>
-                    <span className="text-sm font-semibold text-blue-200 block mb-1">
-                      Build Only Mode
-                    </span>
-                    <p className="text-xs text-gray-300">
-                      Enable this if you have exact layout, slide structure, and image descriptions in your instructions.
-                      AI will use ONLY your provided content and image instructions without adding creative interpretation.
-                    </p>
-                  </div>
-                </label>
-
-                {/* Fill Missing Graphics - Only shown when Build Only is enabled */}
-                {buildOnly && (
-                  <div className="mt-3 pl-8 border-l-2 border-blue-400/30">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={fillMissingGraphics}
-                        onChange={(e) => setFillMissingGraphics(e.target.checked)}
-                        className="mt-1 w-4 h-4 rounded border-white/20 bg-white/10 text-purple-600 focus:ring-2 focus:ring-purple-500 cursor-pointer"
-                      />
-                      <div>
-                        <span className="text-xs font-semibold text-purple-200 block mb-1">
-                          Fill Missing Graphics
-                        </span>
-                        <p className="text-xs text-gray-400">
-                          If you didn't specify graphics/images for some slides, AI will suggest appropriate visual elements for those slides only.
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-                )}
-              </div>
-
               {/* Website URLs */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2">
-                  Reference Website URLs
+                  🌐 Brand Website URLs (Recommended)
                 </label>
                 <div className="space-y-2">
                   {websiteUrls.map((url, index) => (
@@ -357,14 +315,14 @@ export default function CreateWithAIPage() {
                   + Add Another URL
                 </button>
                 <p className="mt-1 text-sm text-gray-400">
-                  Add URLs to websites the AI should reference (company site, competitors, etc.)
+                  <strong>AI will extract:</strong> Brand colors, logos, product images, company info, and style
                 </p>
               </div>
 
               {/* File Upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2">
-                  Reference Documents
+                  📄 Example Pitch Decks & Reference Documents (Optional)
                 </label>
                 <div className="border-2 border-dashed border-white/20 bg-white/5 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-white/10 transition-colors backdrop-blur-sm">
                   <input
@@ -452,7 +410,7 @@ export default function CreateWithAIPage() {
                   </div>
                 )}
                 <p className="mt-2 text-sm text-gray-400">
-                  Upload documents the AI should reference (pitch decks, reports, briefs, etc.)
+                  <strong>AI will learn from:</strong> Upload example pitch decks (PDF) or documents with your content. The AI will analyze their structure, style, and content.
                 </p>
               </div>
 

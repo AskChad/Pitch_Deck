@@ -56,9 +56,10 @@ export default function AdminPage() {
       if (!response.ok) {
         // If API fails, use default keys
         const defaultKeys: ApiKey[] = [
-          { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation' },
-          { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation' },
           { key: 'claude_api_key', value: '', description: 'Anthropic Claude API Key for AI content generation' },
+          { key: 'openai_api_key', value: '', description: 'OpenAI API Key for DALL-E 3 image generation (Recommended - Best Quality)' },
+          { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation (Alternative)' },
+          { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation (Alternative)' },
         ];
         setApiKeys(defaultKeys);
 
@@ -104,9 +105,10 @@ export default function AdminPage() {
     } catch (err: any) {
       // On error, still show default inputs
       const defaultKeys: ApiKey[] = [
-        { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation' },
-        { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation' },
         { key: 'claude_api_key', value: '', description: 'Anthropic Claude API Key for AI content generation' },
+        { key: 'openai_api_key', value: '', description: 'OpenAI API Key for DALL-E 3 image generation (Recommended - Best Quality)' },
+        { key: 'leonardo_api_key', value: '', description: 'Leonardo.ai API Key for image generation (Alternative)' },
+        { key: 'iconkit_api_key', value: '', description: 'IconKit.ai API Key for icon generation (Alternative)' },
       ];
       setApiKeys(defaultKeys);
 

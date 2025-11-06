@@ -3,6 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 import { generateImages as generateLeonardoImages } from '@/lib/ai/leonardo';
 import { generateIcons } from '@/lib/ai/iconkit';
 import { extractBrandAssets } from '@/lib/ai/brand-extractor';
+import {
+  phase1_generateContent,
+  phase2_designSlides,
+  phase3_generateImages,
+  phase4_assembleDeck,
+} from '@/lib/ai/multi-phase-generator';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +29,7 @@ export async function POST(request: NextRequest) {
     const instructions = formData.get('instructions') as string;
     const buildOnly = formData.get('buildOnly') === 'true';
     const fillMissingGraphics = formData.get('fillMissingGraphics') === 'true';
+    const useMultiPhase = formData.get('useMultiPhase') === 'true';
     const urlsJson = formData.get('urls') as string;
     const urls = urlsJson ? JSON.parse(urlsJson) : [];
     const files = formData.getAll('files') as File[];
@@ -82,58 +89,74 @@ GRAPHICS OUTPUT FORMAT:
 - Icons will be generated with IconKit.ai (simple, clean icons)`;
     } else {
       systemPrompt = settings?.find(s => s.key === 'claude_system_prompt')?.value ||
-      `You are an expert pitch deck creator and visual designer. Your mission is to create presentation-ready slides with professional layouts, graphics, and visual design.
+      `You are an expert pitch deck creator and visual designer.
 
-CORE PRINCIPLES:
-- Storytelling First: Every deck tells a story - make it memorable and engaging
-- Visual Over Text: Minimize text, maximize impact. Use graphics, data visualizations, and imagery
-- Professional Design: Every slide must be visually polished and presentation-ready
-- Smart Layouts: Choose the right layout for each content type
+PRIORITY ORDER (MOST IMPORTANT FIRST):
+1. USE ALL REFERENCE MATERIALS PROVIDED - Extract and incorporate information from URLs, documents, and user content
+2. FOLLOW USER INSTRUCTIONS - Honor custom instructions and requirements exactly
+3. CREATE VISUAL STORYTELLING - Prioritize infographics and visuals over text
+4. PROFESSIONAL DESIGN - Apply sophisticated visual design principles
 
-DESIGN DECISION MAKING:
-You must make intelligent decisions about HOW to present each piece of content:
+CRITICAL RULES FOR CONTENT:
+- You MUST thoroughly analyze and USE content from reference websites and documents
+- Extract key information: company details, products, services, metrics, team info, etc.
+- Do NOT ignore reference materials - they contain the core content for the deck
+- If URLs are provided, the deck should reflect information from those URLs
+- User's custom instructions override all other guidance
 
-1. TEXT vs INFOGRAPHICS:
-   - Use bullet points for: lists, features, benefits, key points
-   - Use charts/graphs for: data, metrics, growth, comparisons
-   - Use diagrams for: processes, flows, relationships, systems
-   - Use illustrations for: concepts, metaphors, emotional impact
+CRITICAL RULES FOR BRAND ASSETS:
+- If BRAND ASSETS section is provided, USE THOSE EXACT COLORS in the theme
+- If logo URL is provided, include it in title slides and final slides
+- If brand images are provided, PREFER using those URLs over creating AI image prompts
+- For extracted brand images, use them directly by setting imageUrl (don't create graphic.prompt)
+- PRIORITY: Extracted brand images > Detailed user graphic descriptions > AI-generated images
 
-2. LAYOUT SELECTION:
-   - "title" - Opening slides, section breaks, big statements
-   - "content" - Text-heavy information (but still add visuals!)
-   - "image-focus" - When visual is the star (use for infographics, charts, key illustrations)
-   - "split" - Text on one side, visual on other (great for balanced content)
-   - "stats" - Big numbers with context (revenue, growth, users, etc.)
+CRITICAL RULE - INFOGRAPHICS OVER TEXT:
+Default to visual storytelling. Prioritize infographics over bullet points.
 
-3. VISUAL STRATEGY FOR EACH SLIDE:
-   - EVERY slide needs a visual element (no plain text slides!)
-   - Title slides: Bold background gradient + icon
-   - Content slides: Side illustration or background pattern + icons for bullets
-   - Data slides: Charts, graphs, or big number displays
-   - Concept slides: Illustrations, diagrams, metaphors
+LAYOUT PREFERENCE (60% image-focus, 20% stats, 15% split, 5% content max):
+- "image-focus" - Charts, diagrams, infographics, process flows - USE MOST!
+- "stats" - Big numbers, metrics, KPIs with visual emphasis
+- "split" - Text + large visual side-by-side
+- "content" - USE SPARINGLY! Only when text lists are unavoidable
+- "title" - Section breaks and opening slides
 
-4. BACKGROUND STYLING:
-   Choose appropriate background for each slide:
-   - "gradient" - Smooth color gradients (great for titles, transitions)
-   - "solid" - Clean solid color with accent elements
-   - "pattern" - Subtle geometric patterns
-   - "image" - Full background image (use sparingly, ensure text readability)
+WHEN TO CREATE INFOGRAPHICS:
+- Problem/Solution → Diagram with icons and flows (image-focus)
+- Process/Steps → Step-by-step visual flow (image-focus)
+- Data/Metrics → Chart or graph visualization (image-focus)
+- Features → Feature grid or icon layout (image-focus)
+- Comparison → Side-by-side comparison diagram (image-focus)
+- Timeline → Visual timeline with milestones (image-focus)
+- Architecture → System diagram (image-focus)
 
-CONTENT FORMATTING:
-- Headlines: Bold, memorable, action-oriented (3-8 words max)
-- Bullet Points: Use • prefix, 3-5 points max, each under 12 words
-- Numbers/Stats: Display prominently with context (e.g., "500K+ Users" not "We have 500,000 users")
-- Keep text minimal - let visuals tell the story
+CRITICAL - IF USER PROVIDES "GRAPHIC DESCRIPTION" SECTIONS:
+- You MUST use those exact graphic descriptions in the graphic.prompt field
+- Do NOT create your own simplified version
+- Copy the full detailed description verbatim
+- These descriptions are professionally crafted - use them as-is
 
 GRAPHICS REQUIREMENTS:
-- EVERY slide must have a graphic field
-- Choose between "image" (complex) or "icon" (simple) based on content
-- Position: "background", "side", "center", or "split"
-- Prompts must be detailed and specific for AI generation
+- EVERY slide needs a "graphic" field with:
+  - type: "image" (complex: charts, diagrams, illustrations) or "icon" (simple: icons, symbols)
+  - prompt: Detailed description for AI generation
+  - position: "background", "center", "side", "left", or "right"
 
-OUTPUT FORMAT:
-Return pure JSON with complete design specifications for presentation-ready slides.`;
+BACKGROUNDS (DEFAULT TO GRADIENT/PATTERN - NOT SOLID):
+- "gradient" - Smooth color gradients - USE THIS MOST for titles, stats, important slides
+- "pattern" - Subtle geometric patterns - USE THIS for content and split slides
+- "solid" - Clean solid color - USE SPARINGLY (only 10-20% of slides)
+- "image" - Full background (when graphic.position is "background")
+
+CRITICAL: Most slides should use "gradient" or "pattern" - NOT "solid"!
+
+CONTENT FORMATTING:
+- Headlines: 3-8 words, action-oriented
+- Bullet Points: Use • prefix, 3-5 max, under 12 words each
+- Stats: Big number + label (e.g., "500K+ Users")
+- Minimize text - maximize visual impact
+
+OUTPUT: Return pure JSON with complete specifications.`;
     }
 
     if (!claudeApiKey) {
@@ -148,30 +171,56 @@ Return pure JSON with complete design specifications for presentation-ready slid
 
     // Fetch website content
     if (urls.length > 0) {
-      referenceMaterials += '\n\n## Reference Websites:\n';
+      referenceMaterials += 'Reference Websites (EXTRACT AND USE THIS INFORMATION):\n\n';
       for (const url of urls) {
         try {
-          const response = await fetch(url);
+          console.log(`Fetching content from: ${url}`);
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+          });
+
+          if (!response.ok) {
+            console.error(`Failed to fetch ${url}: HTTP ${response.status}`);
+            referenceMaterials += `From ${url}: (Failed to fetch - HTTP ${response.status})\n\n`;
+            continue;
+          }
+
           const html = await response.text();
-          // Simple text extraction (in production, use a proper HTML parser)
-          const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').substring(0, 5000);
-          referenceMaterials += `\nFrom ${url}:\n${text}\n`;
-        } catch (err) {
-          console.error(`Failed to fetch ${url}:`, err);
-          referenceMaterials += `\nFrom ${url}: (Failed to fetch)\n`;
+          console.log(`Fetched ${html.length} characters from ${url}`);
+
+          // Extract text content more intelligently
+          let text = html
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove scripts
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove styles
+            .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+
+          // Take first 8000 characters for better context
+          text = text.substring(0, 8000);
+
+          console.log(`Extracted ${text.length} characters of text content from ${url}`);
+          referenceMaterials += `=== Content from ${url} ===\n${text}\n\n`;
+        } catch (err: any) {
+          console.error(`Failed to fetch ${url}:`, err.message);
+          referenceMaterials += `From ${url}: (Error: ${err.message})\n\n`;
         }
       }
     }
 
     // Process uploaded files
     if (files.length > 0) {
-      referenceMaterials += '\n\n## Reference Documents:\n';
+      referenceMaterials += 'Reference Documents (EXTRACT AND USE THIS INFORMATION):\n\n';
       for (const file of files) {
         try {
           const text = await file.text();
-          referenceMaterials += `\nFrom ${file.name}:\n${text.substring(0, 10000)}\n`;
-        } catch (err) {
-          console.error(`Failed to read ${file.name}:`, err);
+          console.log(`Read ${text.length} characters from file: ${file.name}`);
+          referenceMaterials += `=== Content from ${file.name} ===\n${text.substring(0, 10000)}\n\n`;
+        } catch (err: any) {
+          console.error(`Failed to read ${file.name}:`, err.message);
+          referenceMaterials += `From ${file.name}: (Error: ${err.message})\n\n`;
         }
       }
     }
@@ -184,21 +233,177 @@ Return pure JSON with complete design specifications for presentation-ready slid
         brandAssets = await extractBrandAssets(urls[0]);
         console.log('Brand assets extracted:', brandAssets);
 
-        // Add brand info to reference materials
+        // Add comprehensive brand info to reference materials
+        referenceMaterials += `\n\n=== BRAND ASSETS (USE THESE AS PRIMARY BRAND GUIDE) ===\n\n`;
+
         if (brandAssets.companyName) {
-          referenceMaterials += `\n\n## Brand Information:\nCompany Name: ${brandAssets.companyName}\n`;
+          referenceMaterials += `Company Name: ${brandAssets.companyName}\n`;
         }
-        if (brandAssets.logo) {
-          referenceMaterials += `Logo URL: ${brandAssets.logo}\n`;
+
+        if (brandAssets.description) {
+          referenceMaterials += `Company Description: ${brandAssets.description}\n`;
         }
+
         if (brandAssets.colors) {
-          referenceMaterials += `Brand Colors:\n- Primary: ${brandAssets.colors.primary}\n- Secondary: ${brandAssets.colors.secondary}\n- Accent: ${brandAssets.colors.accent}\n`;
+          referenceMaterials += `\nBrand Colors (USE THESE EXACT COLORS):\n`;
+          referenceMaterials += `- Primary: ${brandAssets.colors.primary}\n`;
+          referenceMaterials += `- Secondary: ${brandAssets.colors.secondary}\n`;
+          referenceMaterials += `- Accent: ${brandAssets.colors.accent}\n`;
         }
+
+        if (brandAssets.logo) {
+          referenceMaterials += `\nCompany Logo: ${brandAssets.logo}\n`;
+          referenceMaterials += `CRITICAL: Use this logo URL in appropriate slides (title slide, final slide, etc.)\n`;
+        }
+
+        if (brandAssets.favicon) {
+          referenceMaterials += `Favicon: ${brandAssets.favicon}\n`;
+        }
+
+        if (brandAssets.heroImage) {
+          referenceMaterials += `\nHero/Featured Image: ${brandAssets.heroImage}\n`;
+          referenceMaterials += `CRITICAL: This is a key brand image - use it in title or important slides\n`;
+        }
+
+        if (brandAssets.productImages && brandAssets.productImages.length > 0) {
+          referenceMaterials += `\nProduct/Feature Images (USE THESE instead of generating new images):\n`;
+          brandAssets.productImages.forEach((img, i) => {
+            referenceMaterials += `${i + 1}. ${img}\n`;
+          });
+        }
+
+        if (brandAssets.teamImages && brandAssets.teamImages.length > 0) {
+          referenceMaterials += `\nTeam Images:\n`;
+          brandAssets.teamImages.forEach((img, i) => {
+            referenceMaterials += `${i + 1}. ${img}\n`;
+          });
+        }
+
+        if (brandAssets.allImages && brandAssets.allImages.length > 0) {
+          referenceMaterials += `\nAll Available Brand Images (${brandAssets.allImages.length} total):\n`;
+          brandAssets.allImages.slice(0, 10).forEach((img, i) => {
+            referenceMaterials += `${i + 1}. ${img}\n`;
+          });
+          if (brandAssets.allImages.length > 10) {
+            referenceMaterials += `... and ${brandAssets.allImages.length - 10} more\n`;
+          }
+        }
+
+        referenceMaterials += `\n=== END BRAND ASSETS ===\n\n`;
       } catch (err) {
         console.error('Failed to extract brand assets:', err);
       }
     }
 
+    // === MULTI-PHASE GENERATION PATH ===
+    // Use the professional 4-phase system for higher quality output
+    if (useMultiPhase) {
+      console.log('\n=== STARTING MULTI-PHASE GENERATION ===\n');
+
+      try {
+        // Phase 1: Content Strategy
+        console.log('PHASE 1: Generating content strategy...');
+        const phase1Output = await phase1_generateContent(
+          claudeApiKey,
+          content,
+          referenceMaterials,
+          instructions
+        );
+        console.log(`Phase 1 complete: ${phase1Output.slides.length} slides planned`);
+        console.log('Deck title:', phase1Output.deckTitle);
+
+        // Phase 2: Visual Design
+        console.log('\nPHASE 2: Designing slides with visual strategy...');
+        const brandColors = brandAssets?.colors ? {
+          primary: brandAssets.colors.primary,
+          secondary: brandAssets.colors.secondary,
+          accent: brandAssets.colors.accent,
+        } : undefined;
+
+        const phase2Output = await phase2_designSlides(
+          claudeApiKey,
+          phase1Output,
+          brandColors
+        );
+        console.log(`Phase 2 complete: ${phase2Output.slides.length} slides designed`);
+
+        // Phase 3: Generate Images
+        console.log('\nPHASE 3: Generating images with Leonardo.ai...');
+        if (!leonardoApiKey) {
+          console.warn('Leonardo API key not configured - skipping image generation');
+        }
+
+        const phase3Output = leonardoApiKey
+          ? await phase3_generateImages(leonardoApiKey, phase2Output)
+          : { slides: phase2Output.slides.map((s, i) => ({ slideNumber: i + 1 })) };
+
+        const successfulImages = phase3Output.slides.filter(s => s.imageUrl).length;
+        console.log(`Phase 3 complete: ${successfulImages}/${phase3Output.slides.length} images generated`);
+
+        // Phase 4: Assemble Final Deck
+        console.log('\nPHASE 4: Assembling final deck...');
+        const deckData = phase4_assembleDeck(
+          phase1Output,
+          phase2Output,
+          phase3Output,
+          brandColors
+        );
+        console.log('Phase 4 complete: Final deck assembled');
+
+        // Apply brand logo if extracted
+        if (brandAssets?.logo) {
+          deckData.logo = brandAssets.logo;
+        }
+
+        console.log('\n=== MULTI-PHASE GENERATION COMPLETE ===');
+        console.log('Final deck:', {
+          name: deckData.name,
+          slides: deckData.slides.length,
+          withImages: deckData.slides.filter((s: any) => s.imageUrl).length,
+        });
+
+        // Save to database
+        const { data: deck, error: dbError } = await supabase
+          .from('pitch_decks')
+          .insert({
+            user_id: user.id,
+            name: name || deckData.name,
+            description: deckData.description || 'Generated with AI (Multi-Phase)',
+            slides: deckData.slides,
+            theme: deckData.theme,
+            ai_generation_data: {
+              content,
+              instructions,
+              urls,
+              buildOnly,
+              fillMissingGraphics,
+              useMultiPhase: true,
+              createdAt: new Date().toISOString(),
+            },
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          return NextResponse.json(
+            { error: 'Failed to save deck' },
+            { status: 500 }
+          );
+        }
+
+        return NextResponse.json(deck);
+
+      } catch (error: any) {
+        console.error('Multi-phase generation error:', error);
+        return NextResponse.json(
+          { error: `Multi-phase generation failed: ${error.message}` },
+          { status: 500 }
+        );
+      }
+    }
+
+    // === SINGLE-PHASE GENERATION PATH (Original) ===
     // Build prompt for Claude
     let prompt: string;
 
@@ -249,16 +454,32 @@ BUILD ONLY MODE RULES:
 Return the result as a JSON object with the following structure:`;
     } else {
       prompt = `
-Create a professional pitch deck based on the following information:
+IMPORTANT: Create a professional pitch deck using ALL the information provided below.
 
-## Main Content:
+${instructions ? `## CUSTOM INSTRUCTIONS (FOLLOW THESE EXACTLY):\n${instructions}\n\n` : ''}
+
+${referenceMaterials ? `## REFERENCE MATERIALS (USE THIS INFORMATION):\n${referenceMaterials}\n\n` : ''}
+
+## USER CONTENT:
 ${content}
 
-${instructions ? `## Custom Instructions:\n${instructions}\n` : ''}
+CRITICAL REQUIREMENTS:
+- You MUST analyze and extract information from all reference websites/documents above
+- Use the reference materials to create accurate, informative slides about the company/product
+- Include specific details from the URLs (metrics, features, benefits, etc.)
+- Follow any custom instructions provided by the user
+- Create 8-12 slides with visual storytelling (prioritize infographics)
+- IF the user provides detailed "Graphic Description:" sections in their content, you MUST use those EXACT descriptions in the graphic.prompt fields - do NOT simplify or rewrite them
+- DEFAULT TO "gradient" or "pattern" backgrounds - NOT "solid" (solid should be <20% of slides)
 
-${referenceMaterials}
+BRAND ASSETS USAGE:
+- IF "BRAND ASSETS" section exists above, USE THE EXACT brand colors provided
+- IF brand logo URL is provided, set it as imageUrl for title slide or key slides (no graphic.prompt needed)
+- IF product/brand images are provided, use those URLs as imageUrl directly (no graphic.prompt needed)
+- ONLY create graphic.prompt when no suitable brand image is available
+- Extracted brand images take PRIORITY over AI-generated graphics
 
-Please create a pitch deck with 8-12 slides. Return the result as a JSON object with the following structure:`;
+Return the result as a JSON object with the following structure:`;
     }
 
     // Add JSON format instructions (same for all modes)
@@ -274,21 +495,20 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
       "title": "Main Title",
       "subtitle": "Subtitle",
       "graphic": {
-        "type": "icon",
-        "prompt": "Modern rocket launching upward symbolizing growth",
+        "type": "image",
+        "prompt": "Modern rocket launching upward against a starfield, symbolizing growth and innovation, cinematic lighting with gold and blue tones",
         "position": "background"
       }
     },
     {
-      "type": "content",
-      "layout": "standard",
-      "background": "solid",
-      "title": "Key Benefits",
-      "content": "• Fast implementation\\n• Cost effective\\n• Scalable solution",
+      "type": "image-focus",
+      "layout": "minimal",
+      "background": "pattern",
+      "title": "The Challenge",
       "graphic": {
         "type": "image",
-        "prompt": "Abstract geometric shapes representing growth and efficiency, modern minimal style",
-        "position": "side"
+        "prompt": "Visual Theme: Sales Chaos. Background: stylized pipeline or bucket leaking gold coins. Left: cluttered icons (phones, emails, sticky notes). Right: frustrated salesperson at desk, head in hand. Overlay: large white bold text 'Selling is an Art — But Chaos Kills Conversion.'",
+        "position": "center"
       }
     },
     {
@@ -297,10 +517,9 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
       "background": "pattern",
       "title": "The Problem",
       "leftContent": "• Current solution is slow\\n• High operational costs\\n• Limited scalability",
-      "rightContent": "graphic",
       "graphic": {
         "type": "image",
-        "prompt": "A detailed illustration of a leaky bucket with water dripping, representing customer churn",
+        "prompt": "Visual Theme: The Leaky Bucket. Central graphic: a metal bucket filled with glowing gold liquid (representing leads). Gold streams drip through visible cracks labeled 'Missed follow-up,' 'No-show,' and 'Slow response.' Pool of gold forming beneath labeled 'Lost Revenue.' Background gradient from dark to warm gold.",
         "position": "right"
       }
     },
@@ -313,18 +532,18 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
       "supportingStats": "2x growth YoY • 95% satisfaction",
       "graphic": {
         "type": "icon",
-        "prompt": "Upward trending arrow chart icon",
+        "prompt": "Upward trending arrow chart icon in gold, glowing effect",
         "position": "background"
       }
     },
     {
       "type": "image-focus",
       "layout": "minimal",
-      "background": "solid",
+      "background": "gradient",
       "title": "Product Architecture",
       "graphic": {
         "type": "image",
-        "prompt": "Technical architecture diagram showing cloud infrastructure, API layer, and frontend components",
+        "prompt": "Technical architecture diagram showing cloud infrastructure with servers, API layer with connecting lines, and frontend components. Modern isometric style with blue and gold color scheme. Include labels for each component.",
         "position": "center"
       }
     }
@@ -376,6 +595,12 @@ CRITICAL - Graphics Requirements:
     // Call Claude API - Using Claude Sonnet 4.5 (latest model as of 2025)
     console.log('Calling Claude API with model: claude-sonnet-4-5-20250929');
     console.log('API key starts with:', claudeApiKey.substring(0, 15) + '...');
+    console.log('System prompt length:', systemPrompt.length);
+    console.log('User prompt length:', prompt.length);
+    console.log('Reference materials length:', referenceMaterials.length);
+    console.log('Has URLs:', urls.length > 0);
+    console.log('Has files:', files.length > 0);
+    console.log('Has instructions:', !!instructions);
 
     let claudeResponse;
     try {
@@ -490,6 +715,11 @@ CRITICAL - Graphics Requirements:
 
     const responseText = claudeData.content[0].text;
 
+    // Log the full response for debugging
+    console.log('=== CLAUDE RESPONSE (first 2000 chars) ===');
+    console.log(responseText.substring(0, 2000));
+    console.log('=== END CLAUDE RESPONSE ===');
+
     // Extract JSON from response (Claude might wrap it in markdown)
     let deckData;
     try {
@@ -506,6 +736,15 @@ CRITICAL - Graphics Requirements:
         { status: 500 }
       );
     }
+
+    // Log what was generated
+    console.log('=== GENERATED DECK STRUCTURE ===');
+    console.log('Deck name:', deckData.name);
+    console.log('Number of slides:', deckData.slides?.length);
+    console.log('Slide types:', deckData.slides?.map((s: any) => s.type).join(', '));
+    console.log('Backgrounds:', deckData.slides?.map((s: any) => s.background).join(', '));
+    console.log('Graphics count:', deckData.slides?.filter((s: any) => s.graphic).length);
+    console.log('=== END DECK STRUCTURE ===');
 
     // Ensure slides have IDs
     deckData.slides = deckData.slides.map((slide: any, index: number) => ({
