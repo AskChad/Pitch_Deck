@@ -19,6 +19,7 @@ export default function CreateWithAIPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0);
 
   const addUrlField = () => {
     setWebsiteUrls([...websiteUrls, '']);
@@ -44,6 +45,11 @@ export default function CreateWithAIPage() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
+  const updateProgress = (message: string, percent: number = 0) => {
+    setProgress(message);
+    setProgressPercent(percent);
+  };
+
   const handleGenerate = async () => {
     if (!deckName.trim()) {
       setError('Please enter a deck name');
@@ -57,7 +63,7 @@ export default function CreateWithAIPage() {
 
     setGenerating(true);
     setError('');
-    setProgress('Preparing your request...');
+    updateProgress('Preparing your request...', 5);
 
     try {
       const formData = new FormData();
@@ -76,12 +82,48 @@ export default function CreateWithAIPage() {
         formData.append('files', file);
       });
 
-      setProgress('Analyzing your content...');
+      // Simulate progressive updates to show activity
+      updateProgress('Gathering reference materials...', 10);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      updateProgress('Sending request to AI...', 15);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      updateProgress('AI is analyzing your content...', 20);
+
+      // Start the API call
+      const startTime = Date.now();
+
+      // Set up a progress simulator while waiting for response
+      const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 5000) {
+          updateProgress('AI is reading your requirements...', 30);
+        } else if (elapsed < 10000) {
+          updateProgress('AI is crafting your story...', 40);
+        } else if (elapsed < 15000) {
+          updateProgress('AI is designing slide structure...', 50);
+        } else if (elapsed < 20000) {
+          updateProgress('AI is creating slide 1...', 55);
+        } else if (elapsed < 25000) {
+          updateProgress('AI is creating slide 2...', 60);
+        } else if (elapsed < 30000) {
+          updateProgress('AI is creating slide 3...', 65);
+        } else if (elapsed < 35000) {
+          updateProgress('AI is adding visual recommendations...', 75);
+        } else if (elapsed < 40000) {
+          updateProgress('AI is finalizing your deck...', 85);
+        } else {
+          updateProgress('Almost done...', 90);
+        }
+      }, 2000);
 
       const response = await fetch('/api/ai/generate-deck', {
         method: 'POST',
         body: formData,
       });
+
+      clearInterval(progressInterval);
 
       if (!response.ok) {
         let errorMessage = 'Failed to generate deck';
@@ -96,7 +138,7 @@ export default function CreateWithAIPage() {
         throw new Error(errorMessage);
       }
 
-      setProgress('Creating your pitch deck...');
+      updateProgress('Saving your pitch deck...', 95);
 
       let data;
       try {
@@ -105,7 +147,7 @@ export default function CreateWithAIPage() {
         throw new Error('Invalid response from server. Please try again.');
       }
 
-      setProgress('Complete! Redirecting to editor...');
+      updateProgress('✓ Complete! Redirecting to editor...', 100);
 
       // Redirect to editor
       setTimeout(() => {
@@ -165,9 +207,13 @@ export default function CreateWithAIPage() {
               <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-400 mx-auto mb-6"></div>
               <h2 className="text-2xl font-bold mb-2 text-white">Generating Your Pitch Deck</h2>
               <p className="text-gray-300 mb-4">{progress}</p>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+              <div className="w-full bg-white/20 rounded-full h-3 mb-2">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
               </div>
+              <p className="text-sm font-semibold text-blue-300">{progressPercent}%</p>
               <p className="text-sm text-gray-400 mt-4">This may take 30-60 seconds...</p>
             </div>
           </div>
