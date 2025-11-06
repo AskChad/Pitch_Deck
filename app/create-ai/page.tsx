@@ -35,7 +35,25 @@ export default function CreateWithAIPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+      const fileArray = Array.from(e.target.files);
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+
+      // Check file sizes
+      const oversizedFiles = fileArray.filter(file => file.size > MAX_SIZE);
+
+      if (oversizedFiles.length > 0) {
+        const fileNames = oversizedFiles.map(f => f.name).join(', ');
+        alert(`⚠️ The following files are too large (max 50MB each):\n\n${fileNames}\n\nPlease use smaller files or compress them.`);
+        return;
+      }
+
+      // Warn about large files (over 10MB)
+      const largeFiles = fileArray.filter(file => file.size > 10 * 1024 * 1024);
+      if (largeFiles.length > 0) {
+        console.warn('Large files detected:', largeFiles.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB)`));
+      }
+
+      setFiles(fileArray);
     }
   };
 
@@ -354,7 +372,7 @@ export default function CreateWithAIPage() {
                       Click to upload files
                     </span>
                     <span className="text-xs text-gray-400 mt-1">
-                      PDF, DOC, DOCX, TXT, MD
+                      PDF, DOC, DOCX, TXT, MD (max 50MB each)
                     </span>
                   </label>
                 </div>
@@ -410,7 +428,7 @@ export default function CreateWithAIPage() {
                   </div>
                 )}
                 <p className="mt-2 text-sm text-gray-400">
-                  <strong>Supported formats:</strong> Text files (.txt, .md, .csv). PDFs can be uploaded but aren't parsed yet - please include key content in the description field above.
+                  <strong>Supported formats:</strong> Text files (.txt, .md, .csv) are fully parsed. PDFs can be uploaded but aren't parsed yet - please include key content in the description field above. <strong>Max file size:</strong> 50MB per file.
                 </p>
               </div>
 

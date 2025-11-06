@@ -10,6 +10,10 @@ import {
   phase4_assembleDeck,
 } from '@/lib/ai/multi-phase-generator';
 
+// Configure route to allow larger file uploads (50MB)
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds timeout
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
