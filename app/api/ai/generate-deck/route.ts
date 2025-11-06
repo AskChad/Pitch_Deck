@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { generateImages as generateLeonardoImages } from '@/lib/ai/leonardo';
+import { generateIcons } from '@/lib/ai/iconkit';
+import { extractBrandAssets } from '@/lib/ai/brand-extractor';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,13 +27,15 @@ export async function POST(request: NextRequest) {
     const urls = urlsJson ? JSON.parse(urlsJson) : [];
     const files = formData.getAll('files') as File[];
 
-    // Get Claude API key from settings
+    // Get API keys from settings
     const { data: settings } = await supabase
       .from('admin_settings')
       .select('key, value')
-      .in('key', ['claude_api_key', 'claude_system_prompt']);
+      .in('key', ['claude_api_key', 'claude_system_prompt', 'leonardo_api_key', 'iconkit_api_key']);
 
     const claudeApiKey = settings?.find(s => s.key === 'claude_api_key')?.value;
+    const leonardoApiKey = settings?.find(s => s.key === 'leonardo_api_key')?.value;
+    const iconkitApiKey = settings?.find(s => s.key === 'iconkit_api_key')?.value;
 
     // Use different system prompt based on mode
     let systemPrompt: string;
@@ -48,7 +53,15 @@ GRAPHICS ENHANCEMENT:
 - For slides WHERE the user HAS specified graphics/images: Use their exact descriptions
 - For slides WHERE the user has NOT specified graphics/images: Suggest appropriate visual elements (charts, diagrams, icons, images)
 - Analyze each slide's content and suggest visuals that enhance the message
-- Recommend specific visualization types where applicable (bar chart, line graph, pie chart, icon, illustration, etc.)`;
+- Recommend specific visualization types where applicable (bar chart, line graph, pie chart, icon, illustration, etc.)
+
+GRAPHICS OUTPUT FORMAT:
+- For each slide that needs a graphic, include a "graphic" field with:
+  - type: "image" (complex graphics like charts, diagrams, illustrations) or "icon" (simple icons)
+  - prompt: Detailed description for AI generation (e.g., "A 3D leaky bucket with water dripping out, symbolizing customer churn")
+  - position: "background", "center", "side", or "inline"
+- Images will be generated with Leonardo.ai (high-quality illustrations, charts, diagrams)
+- Icons will be generated with IconKit.ai (simple, clean icons)`;
     } else if (buildOnly) {
       systemPrompt = `You are a precise pitch deck builder. Your role is to convert user specifications into structured slide decks WITHOUT adding any creative interpretation.
 
@@ -58,7 +71,15 @@ STRICT RULES:
 - Use their exact image descriptions without modification
 - Do NOT add, remove, or reorganize content
 - Do NOT suggest improvements or alternatives
-- Act as a pure conversion tool from user specs to JSON format`;
+- Act as a pure conversion tool from user specs to JSON format
+
+GRAPHICS OUTPUT FORMAT:
+- For each slide that needs a graphic, include a "graphic" field with:
+  - type: "image" (complex graphics like charts, diagrams, illustrations) or "icon" (simple icons)
+  - prompt: Detailed description for AI generation from user's specifications
+  - position: "background", "center", "side", or "inline"
+- Images will be generated with Leonardo.ai (high-quality illustrations, charts, diagrams)
+- Icons will be generated with IconKit.ai (simple, clean icons)`;
     } else {
       systemPrompt = settings?.find(s => s.key === 'claude_system_prompt')?.value ||
       `You are an expert pitch deck creator and storyteller. Your mission is to transform ideas into compelling visual narratives.
@@ -92,6 +113,14 @@ VISUAL SUGGESTIONS:
 - For each slide, recommend specific visual elements (charts, icons, imagery)
 - Indicate where graphics should replace text
 - Suggest data visualization types (bar chart, line graph, pie chart, etc.)
+
+GRAPHICS OUTPUT FORMAT:
+- For each slide that needs a graphic, include a "graphic" field with:
+  - type: "image" (complex graphics like charts, diagrams, illustrations) or "icon" (simple icons)
+  - prompt: Detailed description for AI generation (e.g., "A 3D leaky bucket with water dripping out, symbolizing customer churn")
+  - position: "background", "center", "side", or "inline"
+- Images will be generated with Leonardo.ai (high-quality illustrations, charts, diagrams)
+- Icons will be generated with IconKit.ai (simple, clean icons)
 
 OUTPUT FORMAT:
 Return pure JSON with compelling content and visual guidance.`;
@@ -134,6 +163,29 @@ Return pure JSON with compelling content and visual guidance.`;
         } catch (err) {
           console.error(`Failed to read ${file.name}:`, err);
         }
+      }
+    }
+
+    // Extract brand assets from URLs
+    let brandAssets;
+    if (urls.length > 0) {
+      try {
+        console.log('Extracting brand assets from:', urls[0]);
+        brandAssets = await extractBrandAssets(urls[0]);
+        console.log('Brand assets extracted:', brandAssets);
+
+        // Add brand info to reference materials
+        if (brandAssets.companyName) {
+          referenceMaterials += `\n\n## Brand Information:\nCompany Name: ${brandAssets.companyName}\n`;
+        }
+        if (brandAssets.logo) {
+          referenceMaterials += `Logo URL: ${brandAssets.logo}\n`;
+        }
+        if (brandAssets.colors) {
+          referenceMaterials += `Brand Colors:\n- Primary: ${brandAssets.colors.primary}\n- Secondary: ${brandAssets.colors.secondary}\n- Accent: ${brandAssets.colors.accent}\n`;
+        }
+      } catch (err) {
+        console.error('Failed to extract brand assets:', err);
       }
     }
 
@@ -208,12 +260,22 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
     {
       "type": "title",
       "title": "Main Title",
-      "subtitle": "Subtitle"
+      "subtitle": "Subtitle",
+      "graphic": {
+        "type": "icon",
+        "prompt": "Modern rocket launching upward symbolizing growth",
+        "position": "background"
+      }
     },
     {
       "type": "content",
       "title": "Slide Title",
-      "content": "Bullet points or content"
+      "content": "Bullet points or content",
+      "graphic": {
+        "type": "image",
+        "prompt": "A detailed illustration of a leaky bucket with water dripping, representing customer churn",
+        "position": "center"
+      }
     }
   ],
   "theme": {
@@ -229,7 +291,14 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
 
 Use slide types: "title", "content", "two-column", "image"
 For two-column: include "leftContent" and "rightContent"
-For image: include "imageUrl" (use placeholder if needed)
+For image: include "imageUrl" (will be generated if graphic field is provided)
+
+IMPORTANT - Graphics Field:
+- Add "graphic" field to slides that need visual elements
+- graphic.type: "image" for complex graphics (charts, diagrams, illustrations) or "icon" for simple icons
+- graphic.prompt: Detailed description for AI image generation
+- graphic.position: "background", "center", "side", or "inline"
+- DO NOT include imageUrl - it will be auto-generated from the graphic prompt
 `;
 
     // Call Claude API - Using Claude Sonnet 4.5 (latest model as of 2025)
@@ -371,6 +440,86 @@ For image: include "imageUrl" (use placeholder if needed)
       id: `slide-${Date.now()}-${index}`,
       ...slide,
     }));
+
+    // Generate graphics for slides
+    console.log('Processing graphics for slides...');
+
+    // Collect image prompts (complex graphics)
+    const imagePrompts: { slideIndex: number; prompt: string }[] = [];
+    const iconPrompts: { slideIndex: number; prompt: string }[] = [];
+
+    deckData.slides.forEach((slide: any, index: number) => {
+      if (slide.graphic) {
+        if (slide.graphic.type === 'image') {
+          imagePrompts.push({ slideIndex: index, prompt: slide.graphic.prompt });
+        } else if (slide.graphic.type === 'icon') {
+          iconPrompts.push({ slideIndex: index, prompt: slide.graphic.prompt });
+        }
+      }
+    });
+
+    console.log(`Found ${imagePrompts.length} images and ${iconPrompts.length} icons to generate`);
+
+    // Generate images with Leonardo.ai
+    if (imagePrompts.length > 0 && leonardoApiKey) {
+      console.log('Generating images with Leonardo.ai...');
+      try {
+        const prompts = imagePrompts.map(p => p.prompt);
+        const generatedImages = await generateLeonardoImages(leonardoApiKey, prompts);
+
+        // Apply generated image URLs to slides
+        generatedImages.forEach((image, i) => {
+          if (image?.url) {
+            const slideIndex = imagePrompts[i].slideIndex;
+            deckData.slides[slideIndex].imageUrl = image.url;
+            console.log(`Applied image to slide ${slideIndex + 1}`);
+          }
+        });
+      } catch (err) {
+        console.error('Error generating images with Leonardo.ai:', err);
+      }
+    } else if (imagePrompts.length > 0 && !leonardoApiKey) {
+      console.warn('Leonardo API key not configured - skipping image generation');
+    }
+
+    // Generate icons with IconKit
+    if (iconPrompts.length > 0 && iconkitApiKey) {
+      console.log('Generating icons with IconKit...');
+      try {
+        const prompts = iconPrompts.map(p => p.prompt);
+        const generatedIcons = await generateIcons(iconkitApiKey, prompts);
+
+        // Apply generated icon URLs to slides
+        generatedIcons.forEach((icon, i) => {
+          if (icon?.url) {
+            const slideIndex = iconPrompts[i].slideIndex;
+            deckData.slides[slideIndex].imageUrl = icon.url;
+            console.log(`Applied icon to slide ${slideIndex + 1}`);
+          }
+        });
+      } catch (err) {
+        console.error('Error generating icons with IconKit:', err);
+      }
+    } else if (iconPrompts.length > 0 && !iconkitApiKey) {
+      console.warn('IconKit API key not configured - skipping icon generation');
+    }
+
+    // Apply brand colors to theme if extracted
+    if (brandAssets?.colors && deckData.theme) {
+      console.log('Applying extracted brand colors to theme');
+      deckData.theme.colors = {
+        ...deckData.theme.colors,
+        primary: brandAssets.colors.primary,
+        secondary: brandAssets.colors.secondary,
+        accent: brandAssets.colors.accent,
+      };
+    }
+
+    // Apply brand logo if extracted and not already set
+    if (brandAssets?.logo && !deckData.logo) {
+      console.log('Applying extracted brand logo');
+      deckData.logo = brandAssets.logo;
+    }
 
     // Create deck in database
     const { data: deck, error: dbError } = await supabase
