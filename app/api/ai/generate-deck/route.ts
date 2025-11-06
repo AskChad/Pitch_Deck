@@ -12,7 +12,7 @@ import {
 
 // Configure route to allow larger file uploads (50MB)
 export const runtime = 'nodejs';
-export const maxDuration = 60; // 60 seconds timeout
+export const maxDuration = 300; // 5 minutes timeout (requires Vercel Pro plan)
 
 export async function POST(request: NextRequest) {
   try {

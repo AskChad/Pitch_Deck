@@ -169,12 +169,19 @@ export default function CreateWithAIPage() {
       if (!response.ok) {
         let errorMessage = 'Failed to generate deck';
         try {
-          const data = await response.json();
-          errorMessage = data.error || errorMessage;
-        } catch {
-          // If response isn't JSON, try to get text
+          // Try to read as text first (works for both JSON and plain text)
           const text = await response.text();
-          errorMessage = text.substring(0, 200) || errorMessage;
+
+          // Try to parse as JSON
+          try {
+            const data = JSON.parse(text);
+            errorMessage = data.error || errorMessage;
+          } catch {
+            // If not JSON, use the text directly
+            errorMessage = text.substring(0, 200) || errorMessage;
+          }
+        } catch {
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
         throw new Error(errorMessage);
       }
