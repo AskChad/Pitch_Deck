@@ -2,7 +2,7 @@
  * Supabase Storage utilities for handling large file uploads
  */
 
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 
 export interface UploadedFile {
   fileName: string;
@@ -19,7 +19,6 @@ export async function uploadFileToStorage(
   file: File,
   userId: string
 ): Promise<UploadedFile> {
-  const supabase = createClient();
 
   // Generate unique file path
   const timestamp = Date.now();
@@ -83,7 +82,6 @@ export async function uploadFilesToStorage(
 export async function downloadFileFromStorage(
   filePath: string
 ): Promise<Blob> {
-  const supabase = createClient();
 
   const { data, error } = await supabase.storage
     .from('pitch-deck-uploads')
@@ -100,7 +98,6 @@ export async function downloadFileFromStorage(
  * Delete file from Supabase Storage
  */
 export async function deleteFileFromStorage(filePath: string): Promise<void> {
-  const supabase = createClient();
 
   const { error } = await supabase.storage
     .from('pitch-deck-uploads')

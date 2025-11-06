@@ -18,59 +18,61 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 async function createStorageBucket() {
   console.log('🚀 Creating storage bucket for file uploads...\n');
 
+  const sql = `
+-- Create storage bucket for pitch deck file uploads
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'pitch-deck-uploads',
+  'pitch-deck-uploads',
+  true,
+  1073741824, -- 1GB
+  ARRAY['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'text/markdown', 'text/csv']
+)
+ON CONFLICT (id) DO UPDATE SET
+  public = EXCLUDED.public,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow authenticated uploads" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public reads" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated deletes" ON storage.objects;
+
+-- Policy: Allow authenticated users to upload
+CREATE POLICY "Allow authenticated uploads"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'pitch-deck-uploads');
+
+-- Policy: Allow public reads
+CREATE POLICY "Allow public reads"
+ON storage.objects FOR SELECT TO public
+USING (bucket_id = 'pitch-deck-uploads');
+
+-- Policy: Allow authenticated deletes
+CREATE POLICY "Allow authenticated deletes"
+ON storage.objects FOR DELETE TO authenticated
+USING (bucket_id = 'pitch-deck-uploads' AND auth.uid()::text = (storage.foldername(name))[1]);
+  `;
+
   try {
-    // Create the bucket using the storage API
-    const { data: bucket, error: bucketError } = await supabase.storage.createBucket('pitch-deck-uploads', {
-      public: true,
-      fileSizeLimit: 1073741824, // 1GB
-      allowedMimeTypes: [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain',
-        'text/markdown',
-        'text/csv'
-      ]
-    });
+    console.log('Calling exec_sql function...\n');
 
-    if (bucketError) {
-      // Bucket might already exist
-      if (bucketError.message?.includes('already exists')) {
-        console.log('⚠️  Bucket already exists, updating settings...');
+    // Call the exec_sql function
+    const { data, error } = await supabase.rpc('exec_sql', { query: sql });
 
-        // Try to update bucket settings
-        const { error: updateError } = await supabase.storage.updateBucket('pitch-deck-uploads', {
-          public: true,
-          fileSizeLimit: 1073741824,
-          allowedMimeTypes: [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain',
-            'text/markdown',
-            'text/csv'
-          ]
-        });
-
-        if (updateError) {
-          console.log('⚠️  Could not update bucket:', updateError.message);
-        } else {
-          console.log('✅ Bucket settings updated!');
-        }
-      } else {
-        console.error('❌ Error creating bucket:', bucketError);
-        throw bucketError;
-      }
-    } else {
-      console.log('✅ Bucket created successfully!');
+    if (error) {
+      console.error('❌ Error:', error);
+      throw error;
     }
 
+    console.log('✅ Storage bucket created successfully!');
+    console.log('Response:', data);
     console.log('\n📦 Bucket name: pitch-deck-uploads');
     console.log('📏 Max file size: 1GB');
     console.log('🔓 Public access: enabled');
     console.log('\n✨ You can now upload files up to 1GB!\n');
 
-    return bucket;
+    return data;
   } catch (error: any) {
     console.error('❌ Failed to create storage bucket:', error.message);
     throw error;

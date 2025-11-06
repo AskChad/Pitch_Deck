@@ -2,16 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    // Increase body size limit for file uploads (40MB per file)
-    // FormData encoding adds overhead, so 40MB files = ~44MB request
+    // Increase body size limit for file uploads
+    // Note: Large files (up to 1GB) are now uploaded to Supabase Storage directly
     serverActions: {
       bodySizeLimit: '50mb',
-    },
-  },
-  // Configure API route timeouts and limits
-  serverRuntimeConfig: {
-    bodyParser: {
-      sizeLimit: '50mb',
     },
   },
 };
