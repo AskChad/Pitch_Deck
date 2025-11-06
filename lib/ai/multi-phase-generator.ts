@@ -60,6 +60,7 @@ export interface FinalDeck {
   description: string;
   slides: any[];
   theme: any;
+  logo?: string;
 }
 
 /**
