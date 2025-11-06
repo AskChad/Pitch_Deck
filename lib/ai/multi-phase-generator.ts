@@ -81,18 +81,31 @@ CRITICAL RULES:
 2. Headlines must be 5-8 words maximum
 3. Supporting text: 1-2 sentences max (or none)
 4. Every slide answers: "What's the ONE thing the audience should remember?"
-5. Use data/stats sparingly - only when they tell a powerful story
-6. NO design decisions - just pure messaging
+5. EXTRACT and USE specific data, statistics, and facts from reference materials
+6. If reference materials contain processes, numbers, or frameworks - USE THEM EXACTLY
+7. NO design decisions - just pure messaging
+
+REFERENCE MATERIALS:
+Carefully read ALL provided reference materials (URLs, documents, files).
+Extract:
+- Specific numbers, percentages, metrics
+- Company/product names and descriptions
+- Key processes, frameworks, methodologies
+- Value propositions and unique selling points
+- Customer stories, case studies, testimonials
+- Any charts, graphs, or data visualizations mentioned
+
+USE THIS INFORMATION in your slide content - don't make up generic examples.
 
 SLIDE INTENT TYPES:
-- title: Opening slide with main value proposition
-- problem: The pain/challenge (ONE specific problem)
-- solution: How you solve it (ONE clear solution)
-- stats: Big number that proves impact (ONE key metric)
-- process: How it works (3-5 steps max)
-- comparison: Before vs After (clear contrast)
-- case-study: Real-world proof (ONE customer story)
-- cta: What happens next (clear next step)
+- title: Opening slide with main value proposition (use exact company/product info from materials)
+- problem: The pain/challenge (use specific problems mentioned in materials)
+- solution: How you solve it (use exact solution from materials)
+- stats: Big number that proves impact (use REAL numbers from materials)
+- process: How it works (use exact steps/framework from materials - include ALL steps)
+- comparison: Before vs After (use actual before/after data from materials)
+- case-study: Real-world proof (use specific customer stories from materials)
+- cta: What happens next (use actual call-to-action from materials)
 
 OUTPUT STRUCTURE:
 Return ONLY JSON - no markdown, no explanation.`;
@@ -185,14 +198,23 @@ LAYOUT RULES:
 VISUAL STRATEGY:
 For EVERY slide, you must decide what to visualize:
 - Problem? → Create a visual metaphor (leaky bucket, tangled wires, etc.)
-- Process? → Flow diagram with icons and arrows
-- Stats? → Bold number with supporting icons
-- Comparison? → Side-by-side visual or pie chart
-- Solution? → Clean, organized visual showing the fix
+- Process? → INFOGRAPHIC: Flow diagram with numbered steps, icons, and connecting arrows
+- Stats? → INFOGRAPHIC: Bold number with data visualization (bar chart, pie chart, line graph)
+- Comparison? → INFOGRAPHIC: Side-by-side comparison chart, before/after visual
+- Solution? → Clean, organized visual showing the fix with icons or diagrams
+- Data Points? → ALWAYS create charts/graphs (bar charts for comparisons, line graphs for trends, pie charts for percentages)
+
+INFOGRAPHIC REQUIREMENTS:
+When slideIntent is "stats", "process", or contains dataPoints:
+- MUST specify type as "infographic" or "chart"
+- MUST describe exact data visualization (bar chart, line graph, pie chart, process flow)
+- MUST include specific data labels, axes, and visual structure
+- Example: "Vertical bar chart showing 3 bars: 'Before' at 45%, 'During' at 72%, 'After' at 95%, with gradient fills in brand colors, clean grid lines, large percentage labels above each bar"
 
 GRAPHIC PROMPT RULES:
 Be EXTREMELY detailed. Bad prompt: "rocket ship"
 Good prompt: "3D rendered rocket ship in vibrant blue and white, launching upward against a gradient blue background, with glowing orange flame trail, modern minimalist style, viewed from 45-degree angle, cinematic lighting"
+For infographics: "Professional infographic showing [specific data structure], using [brand colors], with clean typography, minimalist design, clear data labels, subtle shadows for depth"
 
 BACKGROUND RULES:
 - gradient: Use for 60% of slides (impactful, professional)
@@ -214,14 +236,22 @@ Design these slides with professional, visually compelling layouts:
 
 ${JSON.stringify(slides, null, 2)}
 
-${brandColors ? `\nBRAND COLORS:\nPrimary: ${brandColors.primary}\nSecondary: ${brandColors.secondary}\nAccent: ${brandColors.accent}\n` : ''}
+${brandColors ? `
+CRITICAL: USE THESE EXACT BRAND COLORS FOR ALL SLIDES:
+Primary Color: ${brandColors.primary} (use for headings, key elements, gradients)
+Secondary Color: ${brandColors.secondary} (use for accents, highlights)
+Accent Color: ${brandColors.accent} (use sparingly for CTAs, emphasis)
+
+DO NOT invent new colors. ONLY use the brand colors provided above.
+Ensure text has sufficient contrast (use white text on dark backgrounds, dark text on light backgrounds).
+` : ''}
 
 For EACH slide, provide:
 1. Layout type (prioritize image-focus and split)
 2. Background type (mostly gradient/pattern)
 3. Detailed visual strategy with VERY specific image generation prompt
 4. Typography specifications
-5. Color scheme
+5. Color scheme (MUST USE THE BRAND COLORS ABOVE - do not create new colors)
 
 Return JSON in this exact format:
 {
@@ -369,6 +399,8 @@ export function phase4_assembleDeck(
     return slideData;
   });
 
+  // Ensure brand colors are used consistently
+  // Override any non-brand colors from design output
   const theme = {
     colors: brandColors || {
       primary: designOutput.slides[0].colorScheme.primary,
@@ -380,10 +412,60 @@ export function phase4_assembleDeck(
     fontFamily: 'Inter, system-ui, sans-serif',
   };
 
+  // Validate text contrast and fix if needed
+  slides.forEach((slide: any) => {
+    if (slide.textColor && slide.backgroundColor) {
+      const contrast = calculateContrast(slide.textColor, slide.backgroundColor);
+      if (contrast < 4.5) {
+        // Poor contrast - fix it
+        const bgIsLight = isLightColor(slide.backgroundColor);
+        slide.textColor = bgIsLight ? '#1f2937' : '#ffffff';
+      }
+    }
+  });
+
   return {
     name: contentOutput.deckTitle,
     description: contentOutput.deckDescription,
     slides,
     theme,
   };
+}
+
+/**
+ * Helper functions for color contrast validation
+ */
+function calculateContrast(color1: string, color2: string): number {
+  const l1 = getRelativeLuminance(color1);
+  const l2 = getRelativeLuminance(color2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getRelativeLuminance(hexColor: string): number {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return 0;
+
+  const [r, g, b] = [rgb.r / 255, rgb.g / 255, rgb.b / 255].map(val => {
+    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+  });
+
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+function isLightColor(hexColor: string): boolean {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return true;
+  const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+  return brightness > 128;
 }
