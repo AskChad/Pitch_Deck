@@ -331,6 +331,13 @@ export default function PresentationPage() {
             >
               Edit
             </button>
+
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg backdrop-blur-sm"
+            >
+              Exit
+            </button>
           </div>
         </div>
       </div>
