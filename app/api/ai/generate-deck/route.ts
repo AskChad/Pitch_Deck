@@ -335,7 +335,7 @@ OUTPUT: Return pure JSON with complete specifications.`;
 
         const phase3Output = leonardoApiKey
           ? await phase3_generateImages(leonardoApiKey, phase2Output)
-          : { slides: phase2Output.slides.map((s, i) => ({ slideNumber: i + 1 })) };
+          : { slides: phase2Output.slides.map((s, i) => ({ slideNumber: i + 1, imageUrl: undefined })) };
 
         const successfulImages = phase3Output.slides.filter(s => s.imageUrl).length;
         console.log(`Phase 3 complete: ${successfulImages}/${phase3Output.slides.length} images generated`);

@@ -210,10 +210,10 @@ export default function EditorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading editor...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading editor...</p>
         </div>
       </div>
     );
@@ -221,13 +221,13 @@ export default function EditorPage() {
 
   if (error || !deck) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-700 mb-6">{error || 'Deck not found'}</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-2xl p-8 text-center">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">Error</h2>
+          <p className="text-gray-300 mb-6">{error || 'Deck not found'}</p>
           <Link
             href="/dashboard"
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-block px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
           >
             Back to Dashboard
           </Link>
@@ -239,13 +239,13 @@ export default function EditorPage() {
   // Safety check for slides
   if (!deck.slides || deck.slides.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">No Slides Found</h2>
-          <p className="text-gray-700 mb-6">This deck has no slides. Let's add one!</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg shadow-2xl p-8 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">No Slides Found</h2>
+          <p className="text-gray-300 mb-6">This deck has no slides. Let's add one!</p>
           <button
             onClick={() => addSlide('title')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
           >
             Add First Slide
           </button>
@@ -257,14 +257,14 @@ export default function EditorPage() {
   const currentSlide = deck.slides[currentSlideIndex];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-black/30 backdrop-blur-lg border-b border-white/10 sticky top-0 z-10">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-300 hover:text-white transition-colors"
             >
               ← Back
             </Link>
@@ -272,21 +272,21 @@ export default function EditorPage() {
               type="text"
               value={deck.name}
               onChange={(e) => setDeck({ ...deck, name: e.target.value })}
-              className="text-xl font-bold border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+              className="text-xl font-bold bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-1 backdrop-blur-sm"
             />
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowRebuildModal(true)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg"
               title="Rebuild this deck with AI using the original inputs"
             >
               🔄 Rebuild with AI
             </button>
             <Link
               href={`/present/${deckId}`}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-lg"
               target="_blank"
             >
               Present
@@ -294,7 +294,7 @@ export default function EditorPage() {
             <button
               onClick={saveDeck}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 transition-all shadow-lg"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -304,11 +304,11 @@ export default function EditorPage() {
 
       {/* Rebuild Modal */}
       {showRebuildModal && (deck as any).ai_generation_data && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold">Rebuild Deck with AI</h2>
-              <p className="text-gray-600 mt-2">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 border border-white/20 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-white/10">
+              <h2 className="text-2xl font-bold text-white">Rebuild Deck with AI</h2>
+              <p className="text-gray-300 mt-2">
                 Review and edit the original inputs, then rebuild your deck with AI.
               </p>
             </div>
@@ -316,42 +316,42 @@ export default function EditorPage() {
             <div className="p-6 space-y-6">
               {/* Content */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   Content
                 </label>
                 <textarea
                   defaultValue={(deck as any).ai_generation_data.content}
                   id="rebuild-content"
                   rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-white/10 border-2 border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 backdrop-blur-sm"
                   placeholder="Enter your pitch deck content..."
                 />
               </div>
 
               {/* Instructions */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   Instructions (Optional)
                 </label>
                 <textarea
                   defaultValue={(deck as any).ai_generation_data.instructions}
                   id="rebuild-instructions"
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-white/10 border-2 border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 backdrop-blur-sm"
                   placeholder="Any specific instructions for the AI..."
                 />
               </div>
 
               {/* URLs */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   Reference URLs
                 </label>
                 <input
                   type="text"
                   defaultValue={(deck as any).ai_generation_data.urls?.join(', ')}
                   id="rebuild-urls"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-white/10 border-2 border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 backdrop-blur-sm"
                   placeholder="https://example.com, https://another.com"
                 />
               </div>
@@ -363,26 +363,26 @@ export default function EditorPage() {
                     type="checkbox"
                     defaultChecked={(deck as any).ai_generation_data.buildOnly}
                     id="rebuild-buildOnly"
-                    className="mr-2"
+                    className="mr-2 w-4 h-4 rounded border-white/20 bg-white/10 text-purple-600"
                   />
-                  <span className="text-sm text-gray-700">Build Only (use exact content)</span>
+                  <span className="text-sm text-gray-300">Build Only (use exact content)</span>
                 </label>
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     defaultChecked={(deck as any).ai_generation_data.fillMissingGraphics}
                     id="rebuild-fillGraphics"
-                    className="mr-2"
+                    className="mr-2 w-4 h-4 rounded border-white/20 bg-white/10 text-purple-600"
                   />
-                  <span className="text-sm text-gray-700">Fill Missing Graphics</span>
+                  <span className="text-sm text-gray-300">Fill Missing Graphics</span>
                 </label>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+            <div className="p-6 border-t border-white/10 flex justify-end gap-3">
               <button
                 onClick={() => setShowRebuildModal(false)}
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-6 py-2 border-2 border-white/20 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 transition-colors backdrop-blur-sm"
               >
                 Cancel
               </button>
@@ -404,7 +404,7 @@ export default function EditorPage() {
                   });
                 }}
                 disabled={rebuildingWithAI}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 transition-all shadow-lg"
               >
                 {rebuildingWithAI ? 'Rebuilding...' : '🔄 Rebuild Deck'}
               </button>
@@ -415,18 +415,18 @@ export default function EditorPage() {
 
       {/* No AI Data Warning Modal */}
       {showRebuildModal && !(deck as any).ai_generation_data && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-yellow-600 mb-4">⚠️ No AI Data Available</h2>
-            <p className="text-gray-700 mb-6">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4">⚠️ No AI Data Available</h2>
+            <p className="text-gray-300 mb-6">
               This deck wasn't created with AI, so there's no original input data to rebuild from.
             </p>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-400 mb-6">
               You can create a new AI-generated deck from the dashboard using the "Create with AI" button.
             </p>
             <button
               onClick={() => setShowRebuildModal(false)}
-              className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="w-full px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
             >
               Got it
             </button>
