@@ -215,11 +215,27 @@ OUTPUT: Return pure JSON with complete specifications.`;
       referenceMaterials += 'Reference Documents (EXTRACT AND USE THIS INFORMATION):\n\n';
       for (const file of files) {
         try {
-          const text = await file.text();
-          console.log(`Read ${text.length} characters from file: ${file.name}`);
-          referenceMaterials += `=== Content from ${file.name} ===\n${text.substring(0, 10000)}\n\n`;
+          // Check if file is a text-based format
+          const isTextFile = file.type.includes('text') ||
+                            file.name.endsWith('.txt') ||
+                            file.name.endsWith('.md') ||
+                            file.name.endsWith('.csv');
+
+          if (isTextFile) {
+            const text = await file.text();
+            console.log(`Read ${text.length} characters from file: ${file.name}`);
+            referenceMaterials += `=== Content from ${file.name} ===\n${text.substring(0, 10000)}\n\n`;
+          } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            // For PDFs, note that they were uploaded but can't be parsed yet
+            console.log(`PDF file uploaded: ${file.name} (${file.size} bytes)`);
+            referenceMaterials += `=== ${file.name} ===\n(PDF file uploaded - filename and metadata available for context. Note: PDF parsing not yet implemented, please provide key content in the description field)\n\n`;
+          } else {
+            // Other file types
+            console.log(`File uploaded: ${file.name} (${file.type}) - skipping binary content`);
+            referenceMaterials += `=== ${file.name} ===\n(File uploaded - ${file.type}. Please provide key content in the description field)\n\n`;
+          }
         } catch (err: any) {
-          console.error(`Failed to read ${file.name}:`, err.message);
+          console.error(`Failed to process ${file.name}:`, err.message);
           referenceMaterials += `From ${file.name}: (Error: ${err.message})\n\n`;
         }
       }

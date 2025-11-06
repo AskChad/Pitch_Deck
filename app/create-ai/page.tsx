@@ -410,7 +410,7 @@ export default function CreateWithAIPage() {
                   </div>
                 )}
                 <p className="mt-2 text-sm text-gray-400">
-                  <strong>AI will learn from:</strong> Upload example pitch decks (PDF) or documents with your content. The AI will analyze their structure, style, and content.
+                  <strong>Supported formats:</strong> Text files (.txt, .md, .csv). PDFs can be uploaded but aren't parsed yet - please include key content in the description field above.
                 </p>
               </div>
 
