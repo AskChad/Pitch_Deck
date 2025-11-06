@@ -9,6 +9,7 @@ import {
   phase3_generateImages,
   phase4_assembleDeck,
 } from '@/lib/ai/multi-phase-generator';
+import { generateDeckWithTemplates } from '@/lib/ai/template-based-generator';
 
 // Configure route to allow larger file uploads (50MB)
 export const runtime = 'nodejs';
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
     const buildOnly = formData.get('buildOnly') === 'true';
     const fillMissingGraphics = formData.get('fillMissingGraphics') === 'true';
     const useMultiPhase = formData.get('useMultiPhase') === 'true';
+    const useTemplates = formData.get('useTemplates') === 'true'; // NEW: Template mode
     const urlsJson = formData.get('urls') as string;
     const urls = urlsJson ? JSON.parse(urlsJson) : [];
 
@@ -347,9 +349,59 @@ OUTPUT: Return pure JSON with complete specifications.`;
       }
     }
 
+    // === TEMPLATE-BASED GENERATION (RECOMMENDED) ===
+    // AI only fills content - all design is pre-determined
+    if (useTemplates) {
+      console.log('\n=== USING TEMPLATE-BASED GENERATION ===\n');
+
+      try {
+        const brandColorsForTemplates = brandAssets?.colors ? {
+          primary: brandAssets.colors.primary,
+          secondary: brandAssets.colors.secondary,
+          accent: brandAssets.colors.accent,
+        } : {
+          primary: '#2563EB',
+          secondary: '#7C3AED',
+          accent: '#F59E0B',
+        };
+
+        const deckData = await generateDeckWithTemplates(
+          claudeApiKey,
+          content,
+          referenceMaterials,
+          brandColorsForTemplates,
+          instructions
+        );
+
+        console.log('Template generation complete:', deckData.slides.length, 'slides');
+
+        // Save to database
+        const { data: deck, error: insertError } = await supabase
+          .from('decks')
+          .insert({
+            name,
+            user_id: user.id,
+            slides: deckData.slides,
+            theme: deckData.theme,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        return NextResponse.json({ id: deck.id, ...deckData });
+      } catch (error: any) {
+        console.error('Template generation error:', error);
+        return NextResponse.json(
+          { error: `Template generation failed: ${error.message}` },
+          { status: 500 }
+        );
+      }
+    }
+
     // === MULTI-PHASE GENERATION PATH ===
     // Use the professional 4-phase system for higher quality output
-    if (useMultiPhase) {
+    else if (useMultiPhase) {
       console.log('\n=== STARTING MULTI-PHASE GENERATION ===\n');
 
       try {

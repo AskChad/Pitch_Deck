@@ -107,7 +107,8 @@ export default function CreateWithAIPage() {
       formData.append('name', deckName);
       formData.append('content', content);
       formData.append('instructions', instructions);
-      formData.append('useMultiPhase', 'true'); // Always use professional multi-phase generation
+      formData.append('useTemplates', 'true'); // Use template-based generation (consistent, predictable)
+      formData.append('useMultiPhase', 'false'); // Disable multi-phase for now
 
       // Add URLs
       const validUrls = websiteUrls.filter(url => url.trim());
