@@ -31,10 +31,10 @@ export async function generateDeckWithTemplates(
   const contentStrategy = await generateContentStrategy(apiKey, userContent, referenceMaterials, instructions);
 
   console.log(`Content strategy: ${contentStrategy.slides.length} slides`);
-  console.log('Slide types:', contentStrategy.slides.map(s => s.type).join(', '));
+  console.log('Slide types:', contentStrategy.slides.map((s: any) => s.type).join(', '));
 
   // Step 2: Select pre-designed templates based on slide types
-  const slideIntents = contentStrategy.slides.map(s => s.type);
+  const slideIntents = contentStrategy.slides.map((s: any) => s.type);
   const templates = selectTemplatesForDeck(slideIntents);
   const brandedTemplates = applyBrandColors(templates, brandColors);
 
