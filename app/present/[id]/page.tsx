@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { SlideRenderer, SlideData, SlideTheme } from '@/components/slides/SlideRenderer';
 
 interface Slide {
   id: string;
@@ -185,93 +186,17 @@ export default function PresentationPage() {
     );
   }
 
-  const currentSlide = deck.slides[currentSlideIndex];
+  const currentSlide = deck.slides[currentSlideIndex] as SlideData;
 
   return (
     <div className="min-h-screen bg-gray-900 relative overflow-hidden">
       {/* Main Slide */}
       <div className="w-full h-screen flex items-center justify-center p-8">
-        <div
-          className="w-full max-w-7xl aspect-video rounded-lg shadow-2xl p-16 relative"
-          style={{
-            backgroundColor: deck.theme.colors.background,
-            color: deck.theme.colors.text,
-            fontFamily: deck.theme.fontFamily,
-          }}
-        >
-          {currentSlide.type === 'title' && (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <h1
-                className="text-6xl lg:text-7xl font-bold mb-6 animate-fade-in"
-                style={{ color: deck.theme.colors.primary }}
-              >
-                {currentSlide.title || 'Title'}
-              </h1>
-              {currentSlide.subtitle && (
-                <p className="text-3xl lg:text-4xl text-gray-600 animate-fade-in-delay">
-                  {currentSlide.subtitle}
-                </p>
-              )}
-            </div>
-          )}
-
-          {currentSlide.type === 'content' && (
-            <div className="h-full animate-fade-in">
-              <h2
-                className="text-5xl lg:text-6xl font-bold mb-8"
-                style={{ color: deck.theme.colors.primary }}
-              >
-                {currentSlide.title || 'Title'}
-              </h2>
-              <div className="text-2xl lg:text-3xl whitespace-pre-wrap leading-relaxed">
-                {currentSlide.content || 'Content'}
-              </div>
-            </div>
-          )}
-
-          {currentSlide.type === 'two-column' && (
-            <div className="h-full flex flex-col animate-fade-in">
-              <h2
-                className="text-5xl lg:text-6xl font-bold mb-8"
-                style={{ color: deck.theme.colors.primary }}
-              >
-                {currentSlide.title || 'Title'}
-              </h2>
-              <div className="flex gap-12 flex-1">
-                <div className="flex-1 text-xl lg:text-2xl leading-relaxed">
-                  {currentSlide.leftContent || 'Left column'}
-                </div>
-                <div className="flex-1 text-xl lg:text-2xl leading-relaxed">
-                  {currentSlide.rightContent || 'Right column'}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {currentSlide.type === 'image' && (
-            <div className="h-full flex flex-col animate-fade-in">
-              <h2
-                className="text-5xl lg:text-6xl font-bold mb-8"
-                style={{ color: deck.theme.colors.primary }}
-              >
-                {currentSlide.title || 'Title'}
-              </h2>
-              <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
-                {currentSlide.imageUrl ? (
-                  <img
-                    src={currentSlide.imageUrl}
-                    alt="Slide"
-                    className="max-w-full max-h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-gray-400 text-center text-2xl">
-                    <div className="text-6xl mb-4">🖼️</div>
-                    <div>No image set</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+        <div className="w-full max-w-7xl aspect-video">
+          <SlideRenderer
+            slide={currentSlide}
+            theme={deck.theme as SlideTheme}
+          />
         </div>
       </div>
 
@@ -353,27 +278,6 @@ export default function PresentationPage() {
         <div>F for fullscreen</div>
         <div>ESC to exit fullscreen</div>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-
-        .animate-fade-in-delay {
-          animation: fade-in 0.5s ease-out 0.2s both;
-        }
-      `}</style>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Link from 'next/link';
+import { SlideRenderer, SlideData, SlideTheme } from '@/components/slides/SlideRenderer';
 
 interface Slide {
   id: string;
@@ -291,66 +292,11 @@ export default function EditorPage() {
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-4xl mx-auto">
             {/* Slide Preview */}
-            <div
-              className="aspect-video bg-white rounded-lg shadow-lg mb-8 p-12 relative"
-              style={{
-                backgroundColor: deck.theme.colors.background,
-                color: deck.theme.colors.text,
-              }}
-            >
-              {currentSlide.type === 'title' && (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <h1 className="text-5xl font-bold mb-4" style={{ color: deck.theme.colors.primary }}>
-                    {currentSlide.title || 'Title'}
-                  </h1>
-                  {currentSlide.subtitle && (
-                    <p className="text-2xl text-gray-600">{currentSlide.subtitle}</p>
-                  )}
-                </div>
-              )}
-
-              {currentSlide.type === 'content' && (
-                <div className="h-full">
-                  <h2 className="text-4xl font-bold mb-6" style={{ color: deck.theme.colors.primary }}>
-                    {currentSlide.title || 'Title'}
-                  </h2>
-                  <div className="text-xl whitespace-pre-wrap">{currentSlide.content || 'Content'}</div>
-                </div>
-              )}
-
-              {currentSlide.type === 'two-column' && (
-                <div className="h-full flex flex-col">
-                  <h2 className="text-4xl font-bold mb-6" style={{ color: deck.theme.colors.primary }}>
-                    {currentSlide.title || 'Title'}
-                  </h2>
-                  <div className="flex gap-8 flex-1">
-                    <div className="flex-1 text-lg">{currentSlide.leftContent || 'Left column'}</div>
-                    <div className="flex-1 text-lg">{currentSlide.rightContent || 'Right column'}</div>
-                  </div>
-                </div>
-              )}
-
-              {currentSlide.type === 'image' && (
-                <div className="h-full flex flex-col">
-                  <h2 className="text-4xl font-bold mb-6" style={{ color: deck.theme.colors.primary }}>
-                    {currentSlide.title || 'Title'}
-                  </h2>
-                  <div className="flex-1 flex items-center justify-center bg-gray-100 rounded">
-                    {currentSlide.imageUrl ? (
-                      <img
-                        src={currentSlide.imageUrl}
-                        alt="Slide"
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    ) : (
-                      <div className="text-gray-400 text-center">
-                        <div className="text-4xl mb-2">🖼️</div>
-                        <div>No image set</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div className="aspect-video mb-8">
+              <SlideRenderer
+                slide={currentSlide as SlideData}
+                theme={deck.theme as SlideTheme}
+              />
             </div>
 
             {/* Slide Properties */}

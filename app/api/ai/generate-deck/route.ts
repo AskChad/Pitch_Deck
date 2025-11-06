@@ -82,48 +82,58 @@ GRAPHICS OUTPUT FORMAT:
 - Icons will be generated with IconKit.ai (simple, clean icons)`;
     } else {
       systemPrompt = settings?.find(s => s.key === 'claude_system_prompt')?.value ||
-      `You are an expert pitch deck creator and storyteller. Your mission is to transform ideas into compelling visual narratives.
+      `You are an expert pitch deck creator and visual designer. Your mission is to create presentation-ready slides with professional layouts, graphics, and visual design.
 
 CORE PRINCIPLES:
 - Storytelling First: Every deck tells a story - make it memorable and engaging
 - Visual Over Text: Minimize text, maximize impact. Use graphics, data visualizations, and imagery
-- Audience-Centric: Tailor tone and content to the target audience
-- Clarity & Simplicity: Complex ideas expressed simply
+- Professional Design: Every slide must be visually polished and presentation-ready
+- Smart Layouts: Choose the right layout for each content type
 
-STRUCTURE FLEXIBILITY:
-- If user provides a specific structure or outline, FOLLOW IT EXACTLY
-- If no structure provided, use the classic pitch deck flow:
-  1. Title/Hook - Grab attention immediately
-  2. Problem - Paint the pain point vividly
-  3. Solution - Your product as the hero
-  4. Market - Size the opportunity
-  5. Product - Show, don't tell
-  6. Traction - Prove momentum with data
-  7. Team - Why you'll win
-  8. Ask - Clear call to action
+DESIGN DECISION MAKING:
+You must make intelligent decisions about HOW to present each piece of content:
 
-CONTENT GUIDELINES:
-- Headlines: Bold, memorable, action-oriented (5-10 words max)
-- Body Text: Bullet points only, 3-5 per slide, each under 10 words
-- Data: Use specific numbers, percentages, growth metrics
-- Graphics: Suggest charts, diagrams, icons, or images for EVERY slide
-- Storytelling: Create narrative flow between slides
+1. TEXT vs INFOGRAPHICS:
+   - Use bullet points for: lists, features, benefits, key points
+   - Use charts/graphs for: data, metrics, growth, comparisons
+   - Use diagrams for: processes, flows, relationships, systems
+   - Use illustrations for: concepts, metaphors, emotional impact
 
-VISUAL SUGGESTIONS:
-- For each slide, recommend specific visual elements (charts, icons, imagery)
-- Indicate where graphics should replace text
-- Suggest data visualization types (bar chart, line graph, pie chart, etc.)
+2. LAYOUT SELECTION:
+   - "title" - Opening slides, section breaks, big statements
+   - "content" - Text-heavy information (but still add visuals!)
+   - "image-focus" - When visual is the star (use for infographics, charts, key illustrations)
+   - "split" - Text on one side, visual on other (great for balanced content)
+   - "stats" - Big numbers with context (revenue, growth, users, etc.)
 
-GRAPHICS OUTPUT FORMAT:
-- For each slide that needs a graphic, include a "graphic" field with:
-  - type: "image" (complex graphics like charts, diagrams, illustrations) or "icon" (simple icons)
-  - prompt: Detailed description for AI generation (e.g., "A 3D leaky bucket with water dripping out, symbolizing customer churn")
-  - position: "background", "center", "side", or "inline"
-- Images will be generated with Leonardo.ai (high-quality illustrations, charts, diagrams)
-- Icons will be generated with IconKit.ai (simple, clean icons)
+3. VISUAL STRATEGY FOR EACH SLIDE:
+   - EVERY slide needs a visual element (no plain text slides!)
+   - Title slides: Bold background gradient + icon
+   - Content slides: Side illustration or background pattern + icons for bullets
+   - Data slides: Charts, graphs, or big number displays
+   - Concept slides: Illustrations, diagrams, metaphors
+
+4. BACKGROUND STYLING:
+   Choose appropriate background for each slide:
+   - "gradient" - Smooth color gradients (great for titles, transitions)
+   - "solid" - Clean solid color with accent elements
+   - "pattern" - Subtle geometric patterns
+   - "image" - Full background image (use sparingly, ensure text readability)
+
+CONTENT FORMATTING:
+- Headlines: Bold, memorable, action-oriented (3-8 words max)
+- Bullet Points: Use • prefix, 3-5 points max, each under 12 words
+- Numbers/Stats: Display prominently with context (e.g., "500K+ Users" not "We have 500,000 users")
+- Keep text minimal - let visuals tell the story
+
+GRAPHICS REQUIREMENTS:
+- EVERY slide must have a graphic field
+- Choose between "image" (complex) or "icon" (simple) based on content
+- Position: "background", "side", "center", or "split"
+- Prompts must be detailed and specific for AI generation
 
 OUTPUT FORMAT:
-Return pure JSON with compelling content and visual guidance.`;
+Return pure JSON with complete design specifications for presentation-ready slides.`;
     }
 
     if (!claudeApiKey) {
@@ -259,6 +269,8 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
   "slides": [
     {
       "type": "title",
+      "layout": "center",
+      "background": "gradient",
       "title": "Main Title",
       "subtitle": "Subtitle",
       "graphic": {
@@ -269,11 +281,50 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
     },
     {
       "type": "content",
-      "title": "Slide Title",
-      "content": "Bullet points or content",
+      "layout": "standard",
+      "background": "solid",
+      "title": "Key Benefits",
+      "content": "• Fast implementation\\n• Cost effective\\n• Scalable solution",
+      "graphic": {
+        "type": "image",
+        "prompt": "Abstract geometric shapes representing growth and efficiency, modern minimal style",
+        "position": "side"
+      }
+    },
+    {
+      "type": "split",
+      "layout": "50-50",
+      "background": "pattern",
+      "title": "The Problem",
+      "leftContent": "• Current solution is slow\\n• High operational costs\\n• Limited scalability",
+      "rightContent": "graphic",
       "graphic": {
         "type": "image",
         "prompt": "A detailed illustration of a leaky bucket with water dripping, representing customer churn",
+        "position": "right"
+      }
+    },
+    {
+      "type": "stats",
+      "layout": "center",
+      "background": "gradient",
+      "mainStat": "500K+",
+      "statLabel": "Active Users",
+      "supportingStats": "2x growth YoY • 95% satisfaction",
+      "graphic": {
+        "type": "icon",
+        "prompt": "Upward trending arrow chart icon",
+        "position": "background"
+      }
+    },
+    {
+      "type": "image-focus",
+      "layout": "minimal",
+      "background": "solid",
+      "title": "Product Architecture",
+      "graphic": {
+        "type": "image",
+        "prompt": "Technical architecture diagram showing cloud infrastructure, API layer, and frontend components",
         "position": "center"
       }
     }
@@ -289,16 +340,37 @@ Please create a pitch deck with 8-12 slides. Return the result as a JSON object 
   }
 }
 
-Use slide types: "title", "content", "two-column", "image"
-For two-column: include "leftContent" and "rightContent"
-For image: include "imageUrl" (will be generated if graphic field is provided)
+SLIDE TYPES AND WHEN TO USE THEM:
+- "title" - Opening slides, section dividers (use layout: "center", background: "gradient")
+- "content" - Bullet points, lists, text content (use layout: "standard", add graphic with position: "side")
+- "split" - Text + image side by side (use layout: "50-50" or "60-40", rightContent: "graphic")
+- "stats" - Big numbers, metrics (use layout: "center", include mainStat, statLabel, supportingStats)
+- "image-focus" - Charts, diagrams, infographics (use layout: "minimal", graphic position: "center")
 
-IMPORTANT - Graphics Field:
-- Add "graphic" field to slides that need visual elements
-- graphic.type: "image" for complex graphics (charts, diagrams, illustrations) or "icon" for simple icons
-- graphic.prompt: Detailed description for AI image generation
-- graphic.position: "background", "center", "side", or "inline"
-- DO NOT include imageUrl - it will be auto-generated from the graphic prompt
+LAYOUTS:
+- "center" - Centered content (for titles, stats)
+- "standard" - Normal text layout with room for side graphic
+- "minimal" - Maximum space for visual content
+- "50-50" or "60-40" - Split layouts (text/graphic ratio)
+
+BACKGROUNDS:
+- "gradient" - Smooth color gradient (use for important slides)
+- "solid" - Clean solid color
+- "pattern" - Subtle geometric pattern
+- "image" - Full background image (ensure text readability)
+
+CONTENT FORMATTING:
+- Use bullet points with • prefix
+- Each bullet under 12 words
+- For stats slides: mainStat is the big number, statLabel is what it represents
+- Keep titles 3-8 words max
+
+CRITICAL - Graphics Requirements:
+- EVERY slide MUST have a graphic field
+- graphic.type: "image" (complex visuals, charts, diagrams) or "icon" (simple icons)
+- graphic.prompt: Detailed, specific description for AI generation
+- graphic.position: "background", "center", "side", "right", or "left"
+- DO NOT include imageUrl - it will be auto-generated
 `;
 
     // Call Claude API - Using Claude Sonnet 4.5 (latest model as of 2025)
