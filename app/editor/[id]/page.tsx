@@ -45,6 +45,8 @@ export default function EditorPage() {
   const [saving, setSaving] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [error, setError] = useState('');
+  const [showRebuildModal, setShowRebuildModal] = useState(false);
+  const [rebuildingWithAI, setRebuildingWithAI] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -153,6 +155,59 @@ export default function EditorPage() {
     setCurrentSlideIndex(toIndex);
   };
 
+  const rebuildWithAI = async (generationData: any) => {
+    if (!deck) return;
+
+    setRebuildingWithAI(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', deck.name);
+      formData.append('content', generationData.content);
+      formData.append('instructions', generationData.instructions || '');
+      formData.append('buildOnly', generationData.buildOnly ? 'true' : 'false');
+      formData.append('fillMissingGraphics', generationData.fillMissingGraphics ? 'true' : 'false');
+      formData.append('urls', JSON.stringify(generationData.urls || []));
+
+      const response = await fetch('/api/ai/generate-deck', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to rebuild deck');
+      }
+
+      const newDeckData = await response.json();
+
+      // Update the current deck with the new data while preserving the ID
+      const updateResponse = await fetch(`/api/decks/${deckId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newDeckData.name,
+          description: newDeckData.description,
+          slides: newDeckData.slides,
+          theme: newDeckData.theme,
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update deck');
+      }
+
+      // Refresh the deck
+      await fetchDeck();
+      setShowRebuildModal(false);
+      alert('Deck successfully rebuilt with AI!');
+    } catch (error: any) {
+      console.error('Error rebuilding deck:', error);
+      alert(error.message || 'Failed to rebuild deck with AI');
+    } finally {
+      setRebuildingWithAI(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -222,6 +277,13 @@ export default function EditorPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowRebuildModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              title="Rebuild this deck with AI using the original inputs"
+            >
+              🔄 Rebuild with AI
+            </button>
             <Link
               href={`/present/${deckId}`}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -239,6 +301,138 @@ export default function EditorPage() {
           </div>
         </div>
       </header>
+
+      {/* Rebuild Modal */}
+      {showRebuildModal && (deck as any).ai_generation_data && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold">Rebuild Deck with AI</h2>
+              <p className="text-gray-600 mt-2">
+                Review and edit the original inputs, then rebuild your deck with AI.
+              </p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Content */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content
+                </label>
+                <textarea
+                  defaultValue={(deck as any).ai_generation_data.content}
+                  id="rebuild-content"
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  placeholder="Enter your pitch deck content..."
+                />
+              </div>
+
+              {/* Instructions */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Instructions (Optional)
+                </label>
+                <textarea
+                  defaultValue={(deck as any).ai_generation_data.instructions}
+                  id="rebuild-instructions"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  placeholder="Any specific instructions for the AI..."
+                />
+              </div>
+
+              {/* URLs */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reference URLs
+                </label>
+                <input
+                  type="text"
+                  defaultValue={(deck as any).ai_generation_data.urls?.join(', ')}
+                  id="rebuild-urls"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  placeholder="https://example.com, https://another.com"
+                />
+              </div>
+
+              {/* Options */}
+              <div className="flex gap-6">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={(deck as any).ai_generation_data.buildOnly}
+                    id="rebuild-buildOnly"
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Build Only (use exact content)</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={(deck as any).ai_generation_data.fillMissingGraphics}
+                    id="rebuild-fillGraphics"
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Fill Missing Graphics</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowRebuildModal(false)}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const content = (document.getElementById('rebuild-content') as HTMLTextAreaElement).value;
+                  const instructions = (document.getElementById('rebuild-instructions') as HTMLTextAreaElement).value;
+                  const urlsText = (document.getElementById('rebuild-urls') as HTMLInputElement).value;
+                  const urls = urlsText ? urlsText.split(',').map(u => u.trim()).filter(Boolean) : [];
+                  const buildOnly = (document.getElementById('rebuild-buildOnly') as HTMLInputElement).checked;
+                  const fillMissingGraphics = (document.getElementById('rebuild-fillGraphics') as HTMLInputElement).checked;
+
+                  rebuildWithAI({
+                    content,
+                    instructions,
+                    urls,
+                    buildOnly,
+                    fillMissingGraphics,
+                  });
+                }}
+                disabled={rebuildingWithAI}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              >
+                {rebuildingWithAI ? 'Rebuilding...' : '🔄 Rebuild Deck'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No AI Data Warning Modal */}
+      {showRebuildModal && !(deck as any).ai_generation_data && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold text-yellow-600 mb-4">⚠️ No AI Data Available</h2>
+            <p className="text-gray-700 mb-6">
+              This deck wasn't created with AI, so there's no original input data to rebuild from.
+            </p>
+            <p className="text-gray-600 mb-6">
+              You can create a new AI-generated deck from the dashboard using the "Create with AI" button.
+            </p>
+            <button
+              onClick={() => setShowRebuildModal(false)}
+              className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex h-[calc(100vh-73px)]">
         {/* Slide List */}

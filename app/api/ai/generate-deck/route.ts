@@ -611,6 +611,14 @@ CRITICAL - Graphics Requirements:
           },
           fontFamily: 'Inter',
         },
+        ai_generation_data: {
+          content,
+          instructions,
+          urls,
+          buildOnly,
+          fillMissingGraphics,
+          createdAt: new Date().toISOString(),
+        },
       })
       .select()
       .single();
