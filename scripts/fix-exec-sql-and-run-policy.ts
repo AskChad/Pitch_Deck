@@ -35,9 +35,11 @@ WITH CHECK (bucket_id = 'pitch-deck-uploads');
   console.log('Approach 1: Trying to reload PostgREST schema cache...');
   try {
     // PostgREST listens for NOTIFY pgrst, 'reload schema' to reload cache
-    const { data: reloadData, error: reloadError } = await supabase.rpc('exec_sql', {
+    const result = await supabase.rpc('exec_sql', {
       query: "NOTIFY pgrst, 'reload schema';"
-    }).catch(() => ({ data: null, error: { message: 'exec_sql not accessible' } }));
+    });
+
+    const { data: reloadData, error: reloadError } = result;
 
     if (!reloadError) {
       console.log('✅ Schema cache reload signal sent');
