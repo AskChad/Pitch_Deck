@@ -85,12 +85,15 @@ export default function CreateWithAIPage() {
     try {
       // Upload files to Supabase Storage first (for large file support up to 1GB)
       let uploadedFiles: any[] = [];
-      if (files.length > 0 && user?.id) {
+      if (files.length > 0) {
         updateProgress(`Uploading ${files.length} file(s) to secure storage...`, 10);
+
+        // Use user ID if logged in, otherwise use anonymous ID
+        const uploadUserId = user?.id || `anonymous-${Date.now()}`;
 
         uploadedFiles = await uploadFilesToStorage(
           files,
-          user.id,
+          uploadUserId,
           (uploaded, total) => {
             const percent = 10 + (uploaded / total) * 10; // 10-20%
             updateProgress(`Uploading files... (${uploaded}/${total})`, percent);
